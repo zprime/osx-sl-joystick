@@ -1,0 +1,5 @@
+This project contains a series of functions to access joysticks in OSX for Simulink and
+Matlab.
+
+Copyright (c) 2012 Zebb Prime and The University of Adelaide.
+Code covered by the BSD license.
