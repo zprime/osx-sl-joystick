@@ -25,24 +25,24 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __AXES_H__
-#define __AXES_H__
+#ifndef __POV_H__
+#define __POV_H__
 
 #include <IOKit/hid/IOHIDDevice.h>
 #include <IOKit/hid/IOHIDElement.h>
 #include <IOKit/hid/IOHIDValue.h>
 
-class Axes
+class POV
 {
   public:
-    Axes( IOHIDDeviceRef newDev, IOHIDElementRef newElem );
-    ~Axes();
+    POV( IOHIDDeviceRef newDev, IOHIDElementRef newElem );
+    ~POV();
     double ReadState( void );
   private:
     IOHIDElementRef element;
     IOHIDDeviceRef device;
-    double logmax, logmin, lastVal;
-    bool isMultiByte, isRelative;
+    bool isMultiByte;
+    double logmax, logmin;
     size_t length;
 };
 

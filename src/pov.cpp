@@ -25,25 +25,55 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __AXES_H__
-#define __AXES_H__
+#include "pov.hpp"
 
-#include <IOKit/hid/IOHIDDevice.h>
-#include <IOKit/hid/IOHIDElement.h>
-#include <IOKit/hid/IOHIDValue.h>
 
-class Axes
+POV::POV( IOHIDDeviceRef newDev, IOHIDElementRef newElem )
 {
-  public:
-    Axes( IOHIDDeviceRef newDev, IOHIDElementRef newElem );
-    ~Axes();
-    double ReadState( void );
-  private:
-    IOHIDElementRef element;
-    IOHIDDeviceRef device;
-    double logmax, logmin, lastVal;
-    bool isMultiByte, isRelative;
-    size_t length;
-};
+  device = newDev;
+  element = newElem;
+  logmax = IOHIDElementGetLogicalMax( element );
+  logmin = IOHIDElementGetLogicalMin( element );
+  length = IOHIDElementGetReportCount( element );
+  if( length > 1 ) isMultiByte = true;
+  else isMultiByte = false;
+}
 
-#endif
+POV::~POV()
+{
+}
+
+double POV::ReadState( void )
+{
+  IOHIDValueRef valref;
+  IOReturn successful = IOHIDDeviceGetValue( device, element, &valref );
+  double value;
+  if( successful == kIOReturnSuccess )
+  {
+    if( !isMultiByte )
+    {
+      value = double( IOHIDValueGetIntegerValue( valref ) );
+    }
+    else
+    {
+      const uint8_t *ptr = IOHIDValueGetBytePtr( valref );
+      switch( length )
+      {
+        case 2:
+          value = double( int(ptr[1])<<8 + int(ptr[0]) );
+          break;
+        case 3:
+          value = double( int(ptr[2])<<16 + int(ptr[1])<<8 + int(ptr[0]) );
+          break;
+        case 4:
+          value = double( int(ptr[3])<<24 + int(ptr[2])<<16 + int(ptr[1])<<8 + int(ptr[0]) );
+          break;
+        default:
+          value = -1;
+      }
+    }
+    if( value > logmax || value < logmin ) return 65536.0;
+    else return 360.0*value/(logmax-logmin+1.0);
+  }
+  return -1;
+}

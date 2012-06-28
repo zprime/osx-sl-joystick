@@ -33,6 +33,11 @@ Axes::Axes( IOHIDDeviceRef newDev, IOHIDElementRef newElem )
   element = newElem;
   logmax = IOHIDElementGetLogicalMax( element );
   logmin = IOHIDElementGetLogicalMin( element );
+  length = IOHIDElementGetReportCount( element );
+  if( length > 1 ) isMultiByte = true;
+  else isMultiByte = false;
+  if( IOHIDElementIsRelative( element ) ) isRelative = true;
+  else isRelative = false;
 }
 
 Axes::~Axes(){}
@@ -43,8 +48,35 @@ double Axes::ReadState( void )
   IOReturn successful = IOHIDDeviceGetValue( device, element, &valref );
   if( successful == kIOReturnSuccess )
   {
-    //return 2*double(IOHIDValueGetIntegerValue( valref ))/(logmax-logmin) - 1;
-    return double(IOHIDValueGetIntegerValue( valref ));
+    double value;
+    if( !isMultiByte )
+    {
+      value = double( IOHIDValueGetIntegerValue( valref ) );
+    }
+    else
+    {
+      const uint8_t *ptr = IOHIDValueGetBytePtr( valref );
+      switch( length )
+      {
+        case 2:
+          value = double( int(ptr[1])<<8 + int(ptr[0]) );
+          break;
+        case 3:
+          value = double( int(ptr[2])<<16 + int(ptr[1])<<8 + int(ptr[0]) );
+          break;
+        case 4:
+          value = double( int(ptr[3])<<24 + int(ptr[2])<<16 + int(ptr[1])<<8 + int(ptr[0]) );
+          break;
+        default:
+          value = -5;
+      }
+    }
+    if( isRelative )
+    {
+      value += lastVal;
+      lastVal = value;
+    }
+    return 2*value/(logmax-logmin) - 1;
   }
   return -5;
 }

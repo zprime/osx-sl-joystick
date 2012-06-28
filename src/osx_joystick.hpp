@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <IOKit/hid/IOHIDDevice.h>
 #include "button.hpp"
 #include "axes.hpp"
+#include "pov.hpp"
 
 using namespace std;
 
@@ -62,33 +63,36 @@ public:
   /**
    * \brief Query joystick for IO capabilities
    *
-   * \input numaxes - pointer to storage to write the number of analogue axes to
-   * \input numbuttons - pointer to storage to write the number of buttons to
-   * \input numinputs - pointer to storage to write the number of inputs (force feedback
-   *        or rumble) to
-   *
-   * \return true if successful, false if unsuccessful
+   * \return An vector containing the number of axes, buttons, pov, outputs
    */
-  bool QueryIO( unsigned int *numaxes, unsigned int *numbuttons, unsigned int *numinputs );
+  vector<int> QueryIO( void );
    
   /**
-   * \brief Poll the joystick axes and buttons
+   * \brief Poll the joystick axes
    *
-   * \input axes - pointer to storage to put the axes data into.
-   * \input buttons - pointer to storage to put the button data into.
-   *
-   * \output true if successful, false if unsuccessful
+   * \output vector of normalised axes doubles.
    */
-  bool Poll( void );
+  vector<double> PollAxes( void );
+
+  /**
+   * \brief Poll the joystick buttons
+   *
+   * \output vector of button boolean values.
+   */
+  vector<bool> PollButtons( void );
     
   /**
-   * \brief Push force-feedback or rumble information to the joystick
+   * \brief Poll the joystick POV hats
    *
-   * \input inputs - pointer to a string of values to write to the joystick
-   *
-   * \output true if successful, false if unsuccessful
+   * \output vector of POV doubles. The value corresponds to the angle (degrees) and
+   *         65536 corresponds to nothing pressed.
    */
-  bool Input( unsigned char *inputs );
+  vector<double> PollPOV( void );
+
+  /**
+   * \brief Push values to the joystick inputs (such as force feedback)
+   */
+  void PushInputs( vector<double> normInputs );
 
   /**
    * \brief Query for the available device names
@@ -104,11 +108,6 @@ public:
    */
   unsigned int QueryNumberDevices( );
   
-  /**
-   * \brief Test whether the current device has been removed, and if so cleanup.
-   */
-  void thisDeviceRemoved( IOHIDDeviceRef device );
-  
 private:
   IOHIDManagerRef myManager;
   IOHIDDeviceRef myDevice;
@@ -116,6 +115,7 @@ private:
   size_t numButtons, numAxes, numInputs;
   vector<Button> myButtons;
   vector<Axes> myAxes;
+  vector<POV> myPOV;
   
   /**
    * \brief Initialise the IOHID manager

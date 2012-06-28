@@ -1,0 +1,154 @@
+/*
+Copyright (c) 2012, Zebb Prime and The University of Adelaide
+All rights reserved.
+ 
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the organization nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL ZEBB PRIME OR THE UNIVERSITY OF ADELAIDE BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#include "dumpjoystick.hpp"
+
+DumpJoystick::DumpJoystick( const char * filename )
+{
+  fh = fopen( filename, "w+" );
+  if( fh==NULL ) fprintf(stderr,"Failed to open file: %s\n",filename);
+  else
+  {
+    fprintf(fh, "  ID           TYPE        USAGE LMAX LMIN LEN IV HN HP IA  U UE NL IR IW  RID\n");
+  }
+}
+    
+DumpJoystick::~DumpJoystick()
+{
+  Close();
+}
+
+void DumpJoystick::Close( void )
+{
+  if( fh != NULL )
+  {
+    fclose( fh );
+    fh = NULL;
+  }
+}
+
+void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, size_t id )
+{
+  IOHIDElementType type = IOHIDElementGetType( element );
+  uint32_t usage = IOHIDElementGetUsage( element );
+  const char *typeStr = ElemTypeStr( type );
+  const char *usageStr = ElemUsageStr( usage );
+  int logmax = IOHIDElementGetLogicalMax( element );
+  int logmin = IOHIDElementGetLogicalMin( element );
+  int iv = IOHIDElementIsVirtual( element );
+  int hn = IOHIDElementHasNullState( element );
+  int hp = IOHIDElementHasPreferredState( element );
+  int ia = IOHIDElementIsArray( element );
+  int eu = IOHIDElementGetUnit( element );
+  int ue = IOHIDElementGetUnitExponent( element );
+  int nl = IOHIDElementIsNonLinear( element );
+  int ir = IOHIDElementIsRelative( element );
+  int iw = IOHIDElementIsWrapping( element );
+  uint32_t rid =  IOHIDElementGetReportCount( element );
+  
+  int len = -1;
+  
+  IOHIDValueRef val;
+  IOReturn successful;
+  if( type == kIOHIDElementTypeInput_Misc || type == kIOHIDElementTypeInput_Button || type == kIOHIDElementTypeInput_Axis || type == kIOHIDElementTypeCollection )
+  {
+    successful = IOHIDDeviceGetValue( device, element, &val );
+    if( successful == kIOReturnSuccess )
+    {
+      len = IOHIDValueGetLength( val );
+    }
+  }
+  
+  if( fh == NULL ) fprintf( stderr, "Error: file has not yet been opened.\n");
+  else
+  {
+    fprintf( fh, "%4i %14s %12s %4i %4i %3i %2i %2i %2i %2i %2i %2i %2i %2i %2i %4i\n", (int)id, typeStr, usageStr, logmax, logmin, len, iv, hn, hp, ia, eu, ue, nl, ir, iw, rid );
+  }
+}
+
+const char * DumpJoystick::ElemTypeStr( IOHIDElementType intype )
+{
+  static const char *types[] = { "Input_Misc", "Input_Button", "Input_Axis", "Input_ScanCodes",
+    "Output", "Feature", "Collection", "Unknown" };
+  switch( intype )
+  {
+    case kIOHIDElementTypeInput_Misc:
+      return types[0];
+    case kIOHIDElementTypeInput_Button:
+      return types[1];
+    case kIOHIDElementTypeInput_Axis:
+      return types[2];
+    case kIOHIDElementTypeInput_ScanCodes:
+      return types[3];
+    case kIOHIDElementTypeOutput:
+      return types[4];
+    case kIOHIDElementTypeFeature:
+      return types[5];
+    case kIOHIDElementTypeCollection:
+      return types[6];
+    default:
+      return types[7];
+  }
+}
+
+const char * DumpJoystick::ElemUsageStr( uint32_t inusage )
+{
+  static const char *usages[] = { "X", "Y", "Z", "Rx", "Ry", "Rz", "Slider", "Dial", "Wheel",
+                            "Hatswitch", "CountedBuffer", "ByteCount", "MotionWakeup",
+                            "Start", "Select", "Vx", "Vy", "Vz", "Vbrx", "Vbry", "Vbrz",
+                            "Vno", "DPadUp", "DPadDown", "DPadRight", "DPadLeft", "Other"};
+  switch( inusage )
+  {
+    case kHIDUsage_GD_X:	return usages[0];
+	case kHIDUsage_GD_Y:	return usages[1];
+	case kHIDUsage_GD_Z:	return usages[2];
+	case kHIDUsage_GD_Rx:	return usages[3];
+	case kHIDUsage_GD_Ry:	return usages[4];
+	case kHIDUsage_GD_Rz:	return usages[5];
+	case kHIDUsage_GD_Slider:	return usages[6];
+	case kHIDUsage_GD_Dial:	return usages[7];
+	case kHIDUsage_GD_Wheel:	return usages[8];
+	case kHIDUsage_GD_Hatswitch:	return usages[9];
+	case kHIDUsage_GD_CountedBuffer:	return usages[10];
+	case kHIDUsage_GD_ByteCount:	return usages[11];
+	case kHIDUsage_GD_MotionWakeup:	return usages[12];
+	case kHIDUsage_GD_Start:	return usages[13];
+	case kHIDUsage_GD_Select:	return usages[14];
+	case kHIDUsage_GD_Vx:	return usages[15];
+	case kHIDUsage_GD_Vy:	return usages[16];
+	case kHIDUsage_GD_Vz:	return usages[17];
+	case kHIDUsage_GD_Vbrx: return usages[18];
+	case kHIDUsage_GD_Vbry: return usages[19];
+	case kHIDUsage_GD_Vbrz: return usages[20];
+	case kHIDUsage_GD_Vno:	return usages[21];
+	case kHIDUsage_GD_DPadUp:	return usages[22];
+	case kHIDUsage_GD_DPadDown:	return usages[23];
+	case kHIDUsage_GD_DPadRight:	return usages[24];
+	case kHIDUsage_GD_DPadLeft:	return usages[25];
+	default: return usages[26];
+  }
+}

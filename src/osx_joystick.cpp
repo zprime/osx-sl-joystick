@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef DEBUG
   #include <iostream>
   #include <cstdio>
+  #include "dumpjoystick.hpp"
   #define DBG_PRINTF(...) fprintf(stdout,__VA_ARGS__)
 #else
   #define DBG_PRINTF(...)
@@ -110,7 +111,7 @@ bool Joystick::Initialise( size_t joyid )
   CFIndex numDevices = CFSetGetCount( deviceRefs );
   
   // Check to make sure the asked for device exists
-  if( joyid >= numDevices )
+  if( joyid >= (size_t)numDevices )
   {
     DBG_PRINTF("Joystick::Initialise - Asked for device %i, but only %i devices are available.\n",
                                                             (int)joyid, (int)numDevices );
@@ -143,92 +144,58 @@ bool Joystick::Initialise( size_t joyid )
     myElements = NULL;
     return false;
   }
+
+#ifdef DEBUG
+  vector<string> devnames = QueryDeviceNames();
+  DumpJoystick dj( devnames[ joyid ].c_str() );
+#endif
   
   // Loop through elements
   // NOTE: IOHIDElementGetName seems to always return NULL (for the gamepads I've tried)
   // NOTE: IOHIDDeviceGetValue must be called to retrieve the new values from the joystick.
-  for( size_t ii=0; ii<numElements; ii++ )
+  for( size_t ii=0; ii<(size_t)numElements; ii++ )
   {
     IOHIDElementRef element = (IOHIDElementRef) CFArrayGetValueAtIndex( myElements, ii );
     IOHIDElementType type = IOHIDElementGetType(element);
-    
-    IOHIDValueRef val;
-    IOReturn successful;
-    int32_t rVal;
     uint32_t usage = IOHIDElementGetUsage( element );
+
+#ifdef DEBUG
+  dj.DumpElement( myDevice, element, ii );
+#endif
     
     switch( type )
     {
       case kIOHIDElementTypeInput_Misc:
       case kIOHIDElementTypeInput_Axis:
-        successful = IOHIDDeviceGetValue( myDevice, element, &val );
-        rVal = -1;
-        if( successful == kIOReturnSuccess )
+        if( IOHIDElementGetReportCount( element ) < 5 )
         {
-          if( IOHIDValueGetLength( val ) < 2 )
+          if( usage == kHIDUsage_GD_Hatswitch )
           {
-            rVal = (int32_t)IOHIDValueGetIntegerValue( val );
-            if( type == kIOHIDElementTypeInput_Misc ) DBG_PRINTF("Misc at %i: usage 0x%X",(int)ii,usage);
-            else DBG_PRINTF("Axis at %i: usage 0x%X",(int)ii,usage);
-            int32_t max = IOHIDElementGetLogicalMax( element );
-            int32_t min = IOHIDElementGetLogicalMin( element );
-            if( IOHIDElementHasNullState( element ) ){ DBG_PRINTF( " Has null state, max=%i, min=%i\n", max, min ); }
-            else{ DBG_PRINTF(" Does not have null state, max=%i, min=%i\n", max, min); }
-            myAxes.push_back( Axes( myDevice, element ) );
+            DBG_PRINTF("HatSwitch at %i\n",(int)ii);
+            myPOV.push_back( POV( myDevice, element ) );
           }
+#ifdef DEBUG
+          if( type == kIOHIDElementTypeInput_Misc ) DBG_PRINTF("Misc at %i: usage 0x%X\n",(int)ii,usage);
+          else DBG_PRINTF("Axis at %i: usage 0x%X\n",(int)ii,usage);
+#endif
+          myAxes.push_back( Axes( myDevice, element ) );
         }
         break;
+        
       case kIOHIDElementTypeInput_Button:
-        successful = IOHIDDeviceGetValue( myDevice, element, &val );
-        if( successful == kIOReturnSuccess )
-        {
-          if( IOHIDValueGetLength( val ) < 2 )
-          {
-            DBG_PRINTF("Button at %i: usage 0x%X\n", ii, usage );
-            myButtons.push_back( Button( myDevice, element ) );
-            //Button thisButton( myDevice, element );
-            //myButtons.push_back( thisButton );
-          }
-        }
+        DBG_PRINTF("Button at %i\n", (int)ii );
+        myButtons.push_back( Button( myDevice, element ) );
         break;
+        
       case kIOHIDElementTypeOutput:
         break;
       default: break;
     }
-    
-/*    
-    if( type==kIOHIDElementTypeInput_Misc || type==kIOHIDElementTypeInput_Button ||
-                                                       type==kIOHIDElementTypeInput_Axis )
-    {
-      IOHIDValueRef val;
-      IOReturn successful = IOHIDDeviceGetValue( myDevice, element, &val );
-      int32_t rVal = -1;
-      if( successful == kIOReturnSuccess )
-      {
-        if( IOHIDValueGetLength( val ) < 2 )
-        {
-          rVal = (int32_t)IOHIDValueGetIntegerValue( val );
-        }
-      }
-    
-        switch( type )
-        {
-        case kIOHIDElementTypeInput_Misc:
-          DBG_PRINTF("Input_Misc at %i: %i\n",ii,rVal);
-          break;
-        case kIOHIDElementTypeInput_Button:
-          DBG_PRINTF("Input_Button at %i: %i\n",ii,rVal);
-          break;
-        case kIOHIDElementTypeInput_Axis:
-          DBG_PRINTF("Input_Axis at %i: %i\n",ii,rVal);
-          break;
-        case kIOHIDElementTypeOutput:
-          DBG_PRINTF("Output at %i: %i\n",ii,rVal);
-          break;
-      }
-    }
-*/
   }
+
+#ifdef DEBUG
+  dj.Close();
+#endif
 
   return true;
 }
@@ -236,52 +203,73 @@ bool Joystick::Initialise( size_t joyid )
 /**
  * \brief Query joystick for IO capabilities
  *
- * \input numaxes - pointer to storage to write the number of analogue axes to
- * \input numbuttons - pointer to storage to write the number of buttons to
- * \input numinputs - pointer to storage to write the number of inputs (force feedback
- *        or rumble) to
- *
- * \return true if successful, false if unsuccessful
+ * \return An vector containing the number of axes, buttons, pov, outputs. If the joystick
+ *         has not been initialised yet, the result will be all -1.
  */
-bool Joystick::QueryIO( unsigned int *numaxes, unsigned int *numbuttons, unsigned int *numinputs )
+vector<int> Joystick::QueryIO( void )
 {
-  return false;
+  vector<int> result(4,-1);
+  if( myElements != NULL )
+  {
+    result[0] = myAxes.size();
+    result[1] = myButtons.size();
+    result[2] = myPOV.size();
+    result[3] = 0;
+  }
+  return result;
 }
    
 /**
- * \brief Poll the joystick axes and buttons
+ * \brief Poll the joystick axes
  *
- * \input axes - pointer to storage to put the axes data into.
- * \input buttons - pointer to storage to put the button data into.
- *
- * \output true if successful, false if unsuccessful
+ * \output vector of normalised axes doubles.
  */
-bool Joystick::Poll( void )
+vector<double> Joystick::PollAxes( void )
 {
-  DBG_PRINTF("Poll called.");
-  for( size_t ii=0; ii < myButtons.size(); ii++ )
+  vector<double> axes( myAxes.size(), 0.0 );
+  for( size_t ii=0; ii<myAxes.size(); ii++ )
   {
-    DBG_PRINTF("%i ",myButtons[ii].ReadState() );
+    axes[ ii ] = myAxes[ ii ].ReadState();
   }
-  for( size_t ii=0; ii < myAxes.size(); ii++ )
+  return axes;
+}
+
+/**
+ * \brief Poll the joystick buttons
+ *
+ * \output vector of button boolean values.
+ */
+vector<bool> Joystick::PollButtons( void )
+{
+  vector<bool> buttons( myButtons.size(), FALSE );
+  for( size_t ii=0; ii<myButtons.size(); ii++ )
   {
-    DBG_PRINTF("%5.2f ",myAxes[ii].ReadState() );
+    buttons[ ii ] = myButtons[ ii ].ReadState();
   }
-  DBG_PRINTF("\r");
-  fflush( stdout );
-  return false;
+  return buttons;
 }
     
 /**
- * \brief Push force-feedback or rumble information to the joystick
+ * \brief Poll the joystick POV hats
  *
- * \input inputs - pointer to a string of values to write to the joystick
- *
- * \output true if successful, false if unsuccessful
+ * \output vector of POV doubles. The value corresponds to the angle (degrees) and
+ *         65536 corresponds to nothing pressed.
  */
-bool Joystick::Input( unsigned char *inputs )
+vector<double> Joystick::PollPOV( void )
 {
-  return false;
+  vector<double> POVs( myPOV.size(), 65536.0 );
+  for( size_t ii=0; ii<myPOV.size(); ii++ )
+  {
+    POVs[ ii ] = myPOV[ ii ].ReadState();
+  }
+  return POVs;
+}
+
+/**
+ * \brief Push values to the joystick inputs (such as force feedback)
+ */
+void Joystick::PushInputs( vector<double> normInputs )
+{
 }
 
 /**
@@ -452,22 +440,4 @@ bool Joystick::InitialiseJoyManager( void )
   CFRelease( myMatching );
 
   return true;
-}
-
-/**
- * \brief Test whether the current device has been removed, and if so cleanup.
- */
-void Joystick::thisDeviceRemoved( IOHIDDeviceRef device )
-{
-  if( device == myDevice )
-  {
-    DBG_PRINTF("Joystick::onDeviceRemoved - device being used has been removed.\n");
-    CFRelease( myDevice );
-    myDevice = NULL;
-    if( myElements )
-    {
-      CFRelease( myElements );
-      myElements = NULL;
-    }
-  }
 }

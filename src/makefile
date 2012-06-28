@@ -24,16 +24,16 @@ JoystickGetAvailable.o32: JoystickGetAvailable.cpp osx_joystick.hpp
 JoystickGetAvailable.o64: JoystickGetAvailable.cpp osx_joystick.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $(CXXM64FLAGS) $(ARCH64) $<
 
-test: osx_joystick.o64 test.o button.o64 axes.o64
+test: osx_joystick.o64 test.o button.o64 axes.o64 dumpjoystick.o64 pov.o64
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 test.o: test.cpp osx_joystick.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $<
 
-osx_joystick.o64: osx_joystick.cpp osx_joystick.hpp button.hpp axes.hpp
+osx_joystick.o64: osx_joystick.cpp osx_joystick.hpp button.hpp axes.hpp dumpjoystick.hpp pov.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH64) $<
 
-osx_joystick.o32: osx_joystick.cpp osx_joystick.hpp button.hpp axes.hpp
+osx_joystick.o32: osx_joystick.cpp osx_joystick.hpp button.hpp axes.hpp dumpjoystick.hpp pov.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH32) $<
 
 button.o32: button.cpp button.hpp
@@ -47,6 +47,20 @@ axes.o32: axes.cpp axes.hpp
 	
 axes.o64: axes.cpp axes.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH64) $<
+	
+dumpjoystick.o32: dumpjoystick.cpp dumpjoystick.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH32) $<
+	
+dumpjoystick.o64: dumpjoystick.cpp dumpjoystick.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH64) $<
+
+pov.o32: pov.cpp pov.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH32) $<
+	
+pov.o64: pov.cpp pov.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH64) $<
+	
+	
 .PHONY: clean cleanest
 
 clean:

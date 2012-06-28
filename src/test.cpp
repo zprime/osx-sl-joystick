@@ -54,11 +54,21 @@ int main( void )
     if( myJoy.Initialise( 0 ) )
     {
       cout << "Successfully initialised device 0.\n";
+      vector<int> capabilities = myJoy.QueryIO();
+      cout << "Joystick reports " << capabilities[0] << " axes, " << capabilities[1] << " buttons, " << capabilities[2] << " POV, " << capabilities[3] << " inputs.\n";
+      vector<bool> buttons;
       for( size_t ii=0; ii<100; ii++ )
       {
         usleep( 100000 );
-        myJoy.Poll();
+        buttons = myJoy.PollButtons();
+        fprintf(stdout,"\r");
+        for( size_t jj=0; jj<buttons.size(); jj++ )
+        {
+          fprintf(stdout,"%i ", (uint8_t)buttons[jj]);
+        }
+        fflush( stdout );
       }
+      fprintf(stdout,"\n");
     }
     else
     {

@@ -25,25 +25,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __AXES_H__
-#define __AXES_H__
+#ifndef __DUMPJOYSTICK_H__
+#define __DUMPJOYSTICK_H__
 
+#include <cstdio>
 #include <IOKit/hid/IOHIDDevice.h>
 #include <IOKit/hid/IOHIDElement.h>
 #include <IOKit/hid/IOHIDValue.h>
+#include <IOKit/hid/IOHIDUsageTables.h>
 
-class Axes
+
+class DumpJoystick
 {
   public:
-    Axes( IOHIDDeviceRef newDev, IOHIDElementRef newElem );
-    ~Axes();
-    double ReadState( void );
+    DumpJoystick( const char * filename );
+    ~DumpJoystick();
+    void DumpElement( IOHIDDeviceRef myDevice, IOHIDElementRef element, size_t id );
+    void Close( void );
   private:
-    IOHIDElementRef element;
-    IOHIDDeviceRef device;
-    double logmax, logmin, lastVal;
-    bool isMultiByte, isRelative;
-    size_t length;
+    FILE *fh;
+    const char * ElemUsageStr( uint32_t inusage );
+    const char * ElemTypeStr( IOHIDElementType intype );
 };
 
 #endif
