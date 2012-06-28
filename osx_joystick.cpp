@@ -52,6 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  {
    myManager = NULL;
    myElements = NULL;
+   myDevice = NULL;
  }
 
 /**
@@ -59,6 +60,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 Joystick::~Joystick()
 {
+  if( myElements != NULL )
+  {
+    CFRelease( myElements );
+    myElements = NULL;
+  }
+  if( myDevice != NULL )
+  {
+//    CFRelease( myDevice );  // Causes segfault 11?
+    myDevice = NULL;
+  }
   if( myManager != NULL )
   {
     IOHIDManagerClose(myManager, kIOHIDOptionsTypeNone);  // Ignore output.
@@ -83,37 +94,143 @@ bool Joystick::Initialise( size_t joyid )
   }
   else DBG_PRINTF("Joystick::Initialise - Successfully opened the IO HID Manager.\n");
   
-  
-  
-/*
-  // Dictionary to find Joysticks
-  CFDictionaryRef myDict =  CFDictionaryCreate( kCFAllocatorDefault, CFSTR(kIOHIDDeviceUsagePairsKey), matching,  2, 
-                        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-                        
-  
-  if( !myDict )
+  // Clear the output, buttons and axes storage
+  if( !myButtons.empty() )
   {
-#ifdef DEBUG
-    cout << "Failed to open dictionary\n";
-#endif
-  CFRelease( myManager );
-  myManager = NULL;
-  return false;
+    myButtons.erase( myButtons.begin(), myButtons.end() );
   }
-#ifdef DEBUG
-  else
-  {
-    cout << "Successfully opened the dictionary\n";
-  }
-#endif
-*/  
-  // Add key for device type to matching dictionary
-//  CFNumberRef myNumref = CFNumberCreate( kCFAllocatorDefault, kCFNumberIntType, &kHIDPage_GenericDesktop );
   
-//  CFRelease( myDict );
-//  CFRelease( myNumref );                     
+  // Open the device references
+  CFSetRef deviceRefs = IOHIDManagerCopyDevices(myManager);
+  
+  // If the device references are empty (NULL), it means there are no devices
+  if( deviceRefs == NULL ) return false;
+  
+  // Number of available devices
+  CFIndex numDevices = CFSetGetCount( deviceRefs );
+  
+  // Check to make sure the asked for device exists
+  if( joyid >= numDevices )
+  {
+    DBG_PRINTF("Joystick::Initialise - Asked for device %i, but only %i devices are available.\n",
+                                                            (int)joyid, (int)numDevices );
+    CFRelease( deviceRefs );
+    return false;
+  }
+  
+  // Move the device references into a vector
+  vector<const void *> devices (numDevices, 0);
+  CFSetGetValues( deviceRefs, &devices.front() );
+  CFRelease( deviceRefs );
+  
+  // Isolate the selected device
+  myDevice = (IOHIDDeviceRef)devices[ joyid ];
+  
+  myElements = IOHIDDeviceCopyMatchingElements( myDevice, NULL, kIOHIDOptionsTypeNone );
+  // Test to make sure elements are valid                                                                
+  if( myElements == NULL )
+  {
+    ERR_PRINTF("Selected device has no elements. Weird.\n");
+    return false;
+  }
+  
+  // Number of elements
+  CFIndex numElements = CFArrayGetCount( myElements );
+  if( numElements == 0 )
+  {
+    ERR_PRINTF("Selected device has no elements. Weird.\n");
+    CFRelease( myElements );
+    myElements = NULL;
+    return false;
+  }
+  
+  // Loop through elements
+  // NOTE: IOHIDElementGetName seems to always return NULL (for the gamepads I've tried)
+  // NOTE: IOHIDDeviceGetValue must be called to retrieve the new values from the joystick.
+  for( size_t ii=0; ii<numElements; ii++ )
+  {
+    IOHIDElementRef element = (IOHIDElementRef) CFArrayGetValueAtIndex( myElements, ii );
+    IOHIDElementType type = IOHIDElementGetType(element);
+    
+    IOHIDValueRef val;
+    IOReturn successful;
+    int32_t rVal;
+    uint32_t usage = IOHIDElementGetUsage( element );
+    
+    switch( type )
+    {
+      case kIOHIDElementTypeInput_Misc:
+      case kIOHIDElementTypeInput_Axis:
+        successful = IOHIDDeviceGetValue( myDevice, element, &val );
+        rVal = -1;
+        if( successful == kIOReturnSuccess )
+        {
+          if( IOHIDValueGetLength( val ) < 2 )
+          {
+            rVal = (int32_t)IOHIDValueGetIntegerValue( val );
+            if( type == kIOHIDElementTypeInput_Misc ) DBG_PRINTF("Misc at %i: usage 0x%X",(int)ii,usage);
+            else DBG_PRINTF("Axis at %i: usage 0x%X",(int)ii,usage);
+            int32_t max = IOHIDElementGetLogicalMax( element );
+            int32_t min = IOHIDElementGetLogicalMin( element );
+            if( IOHIDElementHasNullState( element ) ){ DBG_PRINTF( " Has null state, max=%i, min=%i\n", max, min ); }
+            else{ DBG_PRINTF(" Does not have null state, max=%i, min=%i\n", max, min); }
+            myAxes.push_back( Axes( myDevice, element ) );
+          }
+        }
+        break;
+      case kIOHIDElementTypeInput_Button:
+        successful = IOHIDDeviceGetValue( myDevice, element, &val );
+        if( successful == kIOReturnSuccess )
+        {
+          if( IOHIDValueGetLength( val ) < 2 )
+          {
+            DBG_PRINTF("Button at %i: usage 0x%X\n", ii, usage );
+            myButtons.push_back( Button( myDevice, element ) );
+            //Button thisButton( myDevice, element );
+            //myButtons.push_back( thisButton );
+          }
+        }
+        break;
+      case kIOHIDElementTypeOutput:
+        break;
+      default: break;
+    }
+    
+/*    
+    if( type==kIOHIDElementTypeInput_Misc || type==kIOHIDElementTypeInput_Button ||
+                                                       type==kIOHIDElementTypeInput_Axis )
+    {
+      IOHIDValueRef val;
+      IOReturn successful = IOHIDDeviceGetValue( myDevice, element, &val );
+      int32_t rVal = -1;
+      if( successful == kIOReturnSuccess )
+      {
+        if( IOHIDValueGetLength( val ) < 2 )
+        {
+          rVal = (int32_t)IOHIDValueGetIntegerValue( val );
+        }
+      }
+    
+        switch( type )
+        {
+        case kIOHIDElementTypeInput_Misc:
+          DBG_PRINTF("Input_Misc at %i: %i\n",ii,rVal);
+          break;
+        case kIOHIDElementTypeInput_Button:
+          DBG_PRINTF("Input_Button at %i: %i\n",ii,rVal);
+          break;
+        case kIOHIDElementTypeInput_Axis:
+          DBG_PRINTF("Input_Axis at %i: %i\n",ii,rVal);
+          break;
+        case kIOHIDElementTypeOutput:
+          DBG_PRINTF("Output at %i: %i\n",ii,rVal);
+          break;
+      }
+    }
+*/
+  }
 
-  return false;
+  return true;
 }
   
 /**
@@ -139,8 +256,19 @@ bool Joystick::QueryIO( unsigned int *numaxes, unsigned int *numbuttons, unsigne
  *
  * \output true if successful, false if unsuccessful
  */
-bool Joystick::Poll( unsigned char *axes, unsigned char *buttons )
+bool Joystick::Poll( void )
 {
+  DBG_PRINTF("Poll called.");
+  for( size_t ii=0; ii < myButtons.size(); ii++ )
+  {
+    DBG_PRINTF("%i ",myButtons[ii].ReadState() );
+  }
+  for( size_t ii=0; ii < myAxes.size(); ii++ )
+  {
+    DBG_PRINTF("%5.2f ",myAxes[ii].ReadState() );
+  }
+  DBG_PRINTF("\r");
+  fflush( stdout );
   return false;
 }
     
@@ -205,7 +333,10 @@ vector<string> Joystick::QueryDeviceNames( void )
       string devStr(buffer);
       result.push_back( devStr );
     }
-    else ERR_PRINTF("Device returned a product key that wasn't a string.");
+    else
+    {
+      ERR_PRINTF("Device returned a product key that wasn't a string.");
+    }
   }
   return result;
 }
@@ -230,8 +361,12 @@ unsigned int Joystick::QueryNumberDevices( void )
   // If none (NULL), it means there are no devices
   if( deviceRefs == NULL ) return 0;
   
+  // Copy the number of devices and release the set
+  unsigned int devCount = CFSetGetCount( deviceRefs );
+  CFRelease( deviceRefs );
+  
   // Otherwise return the number of devices
-  return (unsigned int) CFSetGetCount( deviceRefs );
+  return devCount;
   
 }
 
@@ -317,4 +452,22 @@ bool Joystick::InitialiseJoyManager( void )
   CFRelease( myMatching );
 
   return true;
+}
+
+/**
+ * \brief Test whether the current device has been removed, and if so cleanup.
+ */
+void Joystick::thisDeviceRemoved( IOHIDDeviceRef device )
+{
+  if( device == myDevice )
+  {
+    DBG_PRINTF("Joystick::onDeviceRemoved - device being used has been removed.\n");
+    CFRelease( myDevice );
+    myDevice = NULL;
+    if( myElements )
+    {
+      CFRelease( myElements );
+      myElements = NULL;
+    }
+  }
 }

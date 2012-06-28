@@ -25,46 +25,26 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "osx_joystick.hpp"
+#include "axes.hpp"
 
-#include <iostream>
-
-int main( void )
+Axes::Axes( IOHIDDeviceRef newDev, IOHIDElementRef newElem )
 {
-  Joystick myJoy;
+  device = newDev;
+  element = newElem;
+  logmax = IOHIDElementGetLogicalMax( element );
+  logmin = IOHIDElementGetLogicalMin( element );
+}
 
-  cout << "Number of available devices: " << myJoy.QueryNumberDevices() << '\n';
-  
-  vector<string> devs = myJoy.QueryDeviceNames();
-  for( size_t ii=0; ii<devs.size(); ii++ )
+Axes::~Axes(){}
+
+double Axes::ReadState( void )
+{
+  IOHIDValueRef valref;
+  IOReturn successful = IOHIDDeviceGetValue( device, element, &valref );
+  if( successful == kIOReturnSuccess )
   {
-    cout << "Device " << ii << ": " << devs.at(ii) << '\n';
+    //return 2*double(IOHIDValueGetIntegerValue( valref ))/(logmax-logmin) - 1;
+    return double(IOHIDValueGetIntegerValue( valref ));
   }
-  
-  if( myJoy.Initialise( -1 ) ) cout << "Unexpected true initialisation for -1 device.\n";
-  
-  if( myJoy.QueryNumberDevices() == 0 )
-  {
-    cout << "Zero devices detected. Trying to initialise anyway (for kicks).\n";
-    if( myJoy.Initialise( 0 ) ) cout << "Unexpected true initialisation with 0 devices.\n";
-    if( myJoy.Initialise( 1 ) ) cout << "Unexpected true initialisation with the 1 device.\n";
-  }
-  else
-  {
-    if( myJoy.Initialise( 0 ) )
-    {
-      cout << "Successfully initialised device 0.\n";
-      for( size_t ii=0; ii<100; ii++ )
-      {
-        usleep( 100000 );
-        myJoy.Poll();
-      }
-    }
-    else
-    {
-      cout << "Failed to initialise device 0.\n";
-    }
-  }
-  
-  return 0;
+  return -5;
 }

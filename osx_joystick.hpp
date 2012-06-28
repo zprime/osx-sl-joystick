@@ -32,6 +32,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <IOKit/hid/IOHIDManager.h>
 #include <IOKit/hid/IOHIDDevice.h>
+#include "button.hpp"
+#include "axes.hpp"
 
 using namespace std;
 
@@ -77,7 +79,7 @@ public:
    *
    * \output true if successful, false if unsuccessful
    */
-  bool Poll( unsigned char *axes, unsigned char *buttons );
+  bool Poll( void );
     
   /**
    * \brief Push force-feedback or rumble information to the joystick
@@ -102,9 +104,19 @@ public:
    */
   unsigned int QueryNumberDevices( );
   
+  /**
+   * \brief Test whether the current device has been removed, and if so cleanup.
+   */
+  void thisDeviceRemoved( IOHIDDeviceRef device );
+  
 private:
   IOHIDManagerRef myManager;
+  IOHIDDeviceRef myDevice;
   CFArrayRef myElements;
+  size_t numButtons, numAxes, numInputs;
+  vector<Button> myButtons;
+  vector<Axes> myAxes;
+  
   /**
    * \brief Initialise the IOHID manager
    *

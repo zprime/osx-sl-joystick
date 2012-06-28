@@ -16,12 +16,15 @@ void mexFunction( int nlhs, mxArray *plhs[],
   if( nlhs > 1 ) mexErrMsgIdAndTxt( "JoystickGetAvailable:TooManyOutputs",
                    "Too many output arguments to JoystickGetAvailable.\n");
   
+  // Open the joystick, and get the names of all available devices
   Joystick myJoy;
   mwSize numJoys = (unsigned int)myJoy.QueryNumberDevices();
   vector<string> JoyNames = myJoy.QueryDeviceNames();
   
+  // Create the cell output array
   plhs[0] = mxCreateCellArray( 1, &numJoys );
   
+  // Loop through the joystick names, and add them to the cell output
   for( mwSize ii=0; ii<numJoys; ii++ )
   {
     stringstream identifier( stringstream::in|stringstream::out );

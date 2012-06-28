@@ -14,9 +14,9 @@ Library {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "zebb"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Tue Jun 26 11:41:32 2012"
+  LastModifiedDate	  "Tue Jun 26 15:01:43 2012"
   RTWModifiedTimeStamp	  0
-  ModelVersionFormat	  "1.%<AutoIncrement:2>"
+  ModelVersionFormat	  "1.%<AutoIncrement:3>"
   ConfigurationManager	  "None"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -576,7 +576,7 @@ Library {
   }
   System {
     Name		    "osx_joystick"
-    Location		    [71, 223, 651, 483]
+    Location		    [74, 97, 654, 357]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -603,16 +603,15 @@ Library {
       RequestExecContextInheritance off
       MaskHideContents	      off
       MaskPromptString	      "Device:|Automatic axes width|Axes width:|Automatic button width|Button width:"
-      MaskStyleString	      "popup(None|0: PLAYSTATION(R)3 Controller)3 Controller)3 Controller),checkbox,edit,checkbo"
-      "x,edit"
+      MaskStyleString	      "popup(None|0: PLAYSTATION(R)3 Controller),checkbox,edit,checkbox,edit"
       MaskTunableValueString  "off,on,on,on,on"
       MaskCallbackString      "str = get_param(gcb,'MaskStyleString');\nlist = JoystickGetAvailable;\nlist = regexprep"
-      "( list, ['\\',char(124)], '-' );\nstrnew = regexprep(str,'popup\\(.*?\\)',['popup(None', sprintf([char(124),'%s'"
-      "],list{:}), ')' ], 'once' );\nset_param(gcb,'MaskStyleString',strnew);|val = get_param(gcb,'MaskValues');\nvis ="
-      " get_param(gcb,'MaskVisibilities');\nif strcmpi(val{2},'on')\n  vis{3} = 'off';\nelse\n  vis{3} = 'on';\nend\nse"
-      "t_param(gcb,'MaskVisibilities',vis);||val = get_param(gcb,'MaskValues');\nvis = get_param(gcb,'MaskVisibilities'"
-      ");\nif strcmpi(val{4},'on')\n  vis{5} = 'off';\nelse\n  vis{5} = 'on';\nend\nset_param(gcb,'MaskVisibilities',vi"
-      "s);|"
+      "( list, ['\\',char(124)], '-' );\nstrnew = regexprep(str,'popup\\(.*?\\),',['popup(None', sprintf([char(124),'%s"
+      "'],list{:}), '),' ], 'once' );\nset_param(gcb,'MaskStyleString',strnew);|val = get_param(gcb,'MaskValues');\nvis"
+      " = get_param(gcb,'MaskVisibilities');\nif strcmpi(val{2},'on')\n  vis{3} = 'off';\nelse\n  vis{3} = 'on';\nend\n"
+      "set_param(gcb,'MaskVisibilities',vis);||val = get_param(gcb,'MaskValues');\nvis = get_param(gcb,'MaskVisibilitie"
+      "s');\nif strcmpi(val{4},'on')\n  vis{5} = 'off';\nelse\n  vis{5} = 'on';\nend\nset_param(gcb,'MaskVisibilities',"
+      "vis);|"
       MaskEnableString	      "on,on,on,on,on"
       MaskVisibilityString    "on,on,off,on,off"
       MaskToolTipString	      "on,on,on,on,on"
