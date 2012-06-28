@@ -12,10 +12,10 @@ LM32FLAGS = -O -Wl,-twolevel_namespace -undefined error -bundle -Wl,-exported_sy
 
 all: JoystickGetAvailable.mexmaci64 JoystickGetAvailable.mexmaci test
 
-JoystickGetAvailable.mexmaci: JoystickGetAvailable.o32 osx_joystick.o32 button.o32
+JoystickGetAvailable.mexmaci: JoystickGetAvailable.o32 osx_joystick.o32 button.o32 axes.o32 pov.o32
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LM32FLAGS) $(ARCH32)
 
-JoystickGetAvailable.mexmaci64: JoystickGetAvailable.o64 osx_joystick.o64 button.o64
+JoystickGetAvailable.mexmaci64: JoystickGetAvailable.o64 osx_joystick.o64 button.o64 axes.o64 pov.o64
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LM64FLAGS) $(ARCH64)
 
 JoystickGetAvailable.o32: JoystickGetAvailable.cpp osx_joystick.hpp
