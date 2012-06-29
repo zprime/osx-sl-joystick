@@ -33,7 +33,7 @@ DumpJoystick::DumpJoystick( const char * filename )
   if( fh==NULL ) fprintf(stderr,"Failed to open file: %s\n",filename);
   else
   {
-    fprintf(fh, "  ID           TYPE        USAGE LMAX LMIN LEN IV HN HP IA  U UE NL IR IW  RID\n");
+    fprintf(fh, "  ID           TYPE        USAGE LMAX LMIN LEN IV HN HP IA  U UE NL IR IW RID RC RS\n");
   }
 }
     
@@ -68,8 +68,10 @@ void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, 
   int nl = IOHIDElementIsNonLinear( element );
   int ir = IOHIDElementIsRelative( element );
   int iw = IOHIDElementIsWrapping( element );
-  uint32_t rid =  IOHIDElementGetReportCount( element );
-  
+  uint32_t rid =  IOHIDElementGetReportID( element );
+  uint32_t rc = IOHIDElementGetReportCount( element );
+  uint32_t rs = IOHIDElementGetReportSize( element );
+    
   int len = -1;
   
   IOHIDValueRef val;
@@ -86,7 +88,7 @@ void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, 
   if( fh == NULL ) fprintf( stderr, "Error: file has not yet been opened.\n");
   else
   {
-    fprintf( fh, "%4i %14s %12s %4i %4i %3i %2i %2i %2i %2i %2i %2i %2i %2i %2i %4i\n", (int)id, typeStr, usageStr, logmax, logmin, len, iv, hn, hp, ia, eu, ue, nl, ir, iw, rid );
+    fprintf( fh, "%4i %14s %12s %4i %4i %3i %2i %2i %2i %2i %2i %2i %2i %2i %2i %3i %2i %2i\n", (int)id, typeStr, usageStr, logmax, logmin, len, iv, hn, hp, ia, eu, ue, nl, ir, iw, rid, rc, rs );
   }
 }
 

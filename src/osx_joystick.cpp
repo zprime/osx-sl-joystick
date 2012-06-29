@@ -27,9 +27,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "osx_joystick.hpp"
 
-#define DEBUG
-#define ERROR_OUT
-
 #ifdef ERROR_OUT
   #include <cstdio>
   #define ERR_PRINTF(...) fprintf(stderr,__VA_ARGS__)
@@ -167,12 +164,13 @@ bool Joystick::Initialise( size_t joyid )
     {
       case kIOHIDElementTypeInput_Misc:
       case kIOHIDElementTypeInput_Axis:
-        if( IOHIDElementGetReportCount( element ) < 5 )
+        if( IOHIDElementGetReportCount( element ) < 2 )
         {
           if( usage == kHIDUsage_GD_Hatswitch )
           {
             DBG_PRINTF("HatSwitch at %i\n",(int)ii);
             myPOV.push_back( POV( myDevice, element ) );
+            continue;
           }
 #ifdef DEBUG
           if( type == kIOHIDElementTypeInput_Misc ) DBG_PRINTF("Misc at %i: usage 0x%X\n",(int)ii,usage);

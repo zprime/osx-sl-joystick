@@ -56,15 +56,15 @@ int main( void )
       cout << "Successfully initialised device 0.\n";
       vector<int> capabilities = myJoy.QueryIO();
       cout << "Joystick reports " << capabilities[0] << " axes, " << capabilities[1] << " buttons, " << capabilities[2] << " POV, " << capabilities[3] << " inputs.\n";
-      vector<bool> buttons;
+      vector<double> axes;
       for( size_t ii=0; ii<100; ii++ )
       {
         usleep( 100000 );
-        buttons = myJoy.PollButtons();
+        axes = myJoy.PollAxes();
         fprintf(stdout,"\r");
-        for( size_t jj=0; jj<buttons.size(); jj++ )
+        for( size_t jj=0; jj<axes.size(); jj++ )
         {
-          fprintf(stdout,"%i ", (uint8_t)buttons[jj]);
+          fprintf(stdout,"%5.2f ", axes[jj]);
         }
         fflush( stdout );
       }

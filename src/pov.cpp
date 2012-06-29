@@ -34,9 +34,6 @@ POV::POV( IOHIDDeviceRef newDev, IOHIDElementRef newElem )
   element = newElem;
   logmax = IOHIDElementGetLogicalMax( element );
   logmin = IOHIDElementGetLogicalMin( element );
-  length = IOHIDElementGetReportCount( element );
-  if( length > 1 ) isMultiByte = true;
-  else isMultiByte = false;
 }
 
 POV::~POV()
@@ -50,30 +47,9 @@ double POV::ReadState( void )
   double value;
   if( successful == kIOReturnSuccess )
   {
-    if( !isMultiByte )
-    {
-      value = double( IOHIDValueGetIntegerValue( valref ) );
-    }
-    else
-    {
-      const uint8_t *ptr = IOHIDValueGetBytePtr( valref );
-      switch( length )
-      {
-        case 2:
-          value = double( int(ptr[1])<<8 + int(ptr[0]) );
-          break;
-        case 3:
-          value = double( int(ptr[2])<<16 + int(ptr[1])<<8 + int(ptr[0]) );
-          break;
-        case 4:
-          value = double( int(ptr[3])<<24 + int(ptr[2])<<16 + int(ptr[1])<<8 + int(ptr[0]) );
-          break;
-        default:
-          value = -1;
-      }
-    }
+    value = double( IOHIDValueGetIntegerValue( valref ) );
     if( value > logmax || value < logmin ) return 65536.0;
     else return 360.0*value/(logmax-logmin+1.0);
   }
-  return -1;
+  return -5;
 }
