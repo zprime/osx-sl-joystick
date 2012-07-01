@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iostream>
 
+#define UNUSED(x) (void)(x)
+
 /* The gateway function */
 void mexFunction( int nlhs, mxArray *plhs[],
                      int nrhs, const mxArray *prhs[] )
@@ -15,6 +17,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
                              "Ignoring input to JoystickGetAvailable.\n" );
   if( nlhs > 1 ) mexErrMsgIdAndTxt( "JoystickGetAvailable:TooManyOutputs",
                    "Too many output arguments to JoystickGetAvailable.\n");
+  UNUSED( prhs );
   
   // Open the joystick, and get the names of all available devices
   Joystick myJoy;

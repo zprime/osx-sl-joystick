@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "osx_joystick.hpp"
 
+#define UNUSED(x) (void)(x)
+
 #ifdef ERROR_OUT
   #include <cstdio>
   #define ERR_PRINTF(...) fprintf(stderr,__VA_ARGS__)
@@ -268,6 +270,15 @@ vector<double> Joystick::PollPOV( void )
  */
 void Joystick::PushInputs( vector<double> normInputs )
 {
+  UNUSED( normInputs );
+#ifdef ERROR_OUT
+  static bool onceOff = true;
+  if( onceOff )
+  {
+    onceOff = false;
+    ERR_PRINTF("Joystick::PushInputs has not been implemented.");
+  }
+#endif
 }
 
 /**

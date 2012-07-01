@@ -1,7 +1,7 @@
 MATLAB64    = /Applications/MATLAB_R2011a.app
 MATLAB32    = /Applications/MATLAB_R2009a.app
 CXX         = g++
-CXXFLAGS    = -W -Wall -ansi -pedantic -mmacosx-version-min=10.5 -fno-common -no-cpp-precomp -fexceptions -DDEBUG -DERROR_OUT
+CXXFLAGS    = -O -W -Wall -ansi -pedantic -mmacosx-version-min=10.5 -fno-common -fexceptions -DDEBUG -DERROR_OUT
 ARCH32      = -arch i386
 ARCH64      = -arch x86_64
 CXXM64FLAGS = -I$(MATLAB64)/extern/include -I$(MATLAB64)/simulink/include -DMATLAB_MEX_FILE
@@ -31,10 +31,10 @@ test.o: test.cpp osx_joystick.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $<
 
 osx_joystick.o64: osx_joystick.cpp osx_joystick.hpp button.hpp axes.hpp dumpjoystick.hpp pov.hpp
-	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH64) $<
+	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH64) -Wno-variadic-macros $<
 
 osx_joystick.o32: osx_joystick.cpp osx_joystick.hpp button.hpp axes.hpp dumpjoystick.hpp pov.hpp
-	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH32) $<
+	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH32) -Wno-variadic-macros $<
 
 button.o32: button.cpp button.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $(ARCH32) $<
