@@ -27,21 +27,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "dumpjoystick.hpp"
 
+/**
+ * \brief Constructor of the DumpJoystick object.
+ *
+ * \param[in] filename File name to dump the joystick info to.
+ */
 DumpJoystick::DumpJoystick( const char * filename )
 {
+  // Open the file and write the header.
   fh = fopen( filename, "w+" );
   if( fh==NULL ) fprintf(stderr,"Failed to open file: %s\n",filename);
   else
   {
-    fprintf(fh, "  ID           TYPE        USAGE LMAX LMIN LEN IV HN HP IA  U UE NL IR IW RID RC RS\n");
+    fprintf(fh, "  ID           TYPE        USAGE    UID LMAX LMIN LEN IV HN HP IA  U UE NL IR IW RID RC RS\n");
   }
 }
-    
+
+/**
+ * \brief DumpJoystick deconstructor.
+ */   
 DumpJoystick::~DumpJoystick()
 {
   Close();
 }
 
+/**
+ * \brief Close the DumpJoystick object (and the corresponding file).
+ */
 void DumpJoystick::Close( void )
 {
   if( fh != NULL )
@@ -51,8 +63,16 @@ void DumpJoystick::Close( void )
   }
 }
 
+/**
+ * \brief Dump the characteristics of an element into the file.
+ *
+ * \param[in] device Device reference.
+ * \param[in] element Device element.
+ * \param[in] id The element index (for printing in the file).
+ */
 void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, size_t id )
 {
+  // Get the characteristics to dump
   IOHIDElementType type = IOHIDElementGetType( element );
   uint32_t usage = IOHIDElementGetUsage( element );
   const char *typeStr = ElemTypeStr( type );
@@ -72,8 +92,8 @@ void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, 
   uint32_t rc = IOHIDElementGetReportCount( element );
   uint32_t rs = IOHIDElementGetReportSize( element );
     
+  // Try dumping the length of the element.
   int len = -1;
-  
   IOHIDValueRef val;
   IOReturn successful;
   if( type == kIOHIDElementTypeInput_Misc || type == kIOHIDElementTypeInput_Button || type == kIOHIDElementTypeInput_Axis || type == kIOHIDElementTypeCollection )
@@ -85,17 +105,28 @@ void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, 
     }
   }
   
+  // Make sure the file is open
   if( fh == NULL ) fprintf( stderr, "Error: file has not yet been opened.\n");
   else
   {
-    fprintf( fh, "%4i %14s %12s %4i %4i %3i %2i %2i %2i %2i %2i %2i %2i %2i %2i %3i %2i %2i\n", (int)id, typeStr, usageStr, logmax, logmin, len, iv, hn, hp, ia, eu, ue, nl, ir, iw, rid, rc, rs );
+    // Then dump all of the characteristics.
+    fprintf( fh, "%4i %14s %12s (0x%02x) %4i %4i %3i %2i %2i %2i %2i %2i %2i %2i %2i %2i %3i %2i %2i\n", (int)id, typeStr, usageStr, usage, logmax, logmin, len, iv, hn, hp, ia, eu, ue, nl, ir, iw, rid, rc, rs );
   }
 }
 
+/**
+ * \brief Returns a pointer to a string corresponding to a type (from the input).
+ *
+ * \param[in] intype Element type ID to lookup.
+ * \return Pointer to a type string.
+ */
 const char * DumpJoystick::ElemTypeStr( IOHIDElementType intype )
 {
+  // Array of type strings (static, so calling functions can access them).
   static const char *types[] = { "Input_Misc", "Input_Button", "Input_Axis", "Input_ScanCodes",
     "Output", "Feature", "Collection", "Unknown" };
+    
+  // Switch statement to get the types.
   switch( intype )
   {
     case kIOHIDElementTypeInput_Misc:
@@ -117,12 +148,20 @@ const char * DumpJoystick::ElemTypeStr( IOHIDElementType intype )
   }
 }
 
+/**
+ * \brief Get a usage string for a given usage id.
+ *
+ * \param[in] inusage Usage number to lookup.
+ * \return pointer to a string that corresponds to the usage id.
+ */
 const char * DumpJoystick::ElemUsageStr( uint32_t inusage )
 {
+  // Array of usage strings
   static const char *usages[] = { "X", "Y", "Z", "Rx", "Ry", "Rz", "Slider", "Dial", "Wheel",
                             "Hatswitch", "CountedBuffer", "ByteCount", "MotionWakeup",
                             "Start", "Select", "Vx", "Vy", "Vz", "Vbrx", "Vbry", "Vbrz",
                             "Vno", "DPadUp", "DPadDown", "DPadRight", "DPadLeft", "Other"};
+  // Switch statement to find usages
   switch( inusage )
   {
     case kHIDUsage_GD_X:	return usages[0];

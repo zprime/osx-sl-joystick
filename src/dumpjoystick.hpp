@@ -38,10 +38,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class DumpJoystick
 {
   public:
+    /**
+     * \brief Constructor of the DumpJoystick object.
+     *
+     * \param[in] filename File name to dump the joystick info to.
+     */
     DumpJoystick( const char * filename );
+    
+    /**
+     * \brief DumpJoystick deconstructor.
+     */   
     ~DumpJoystick();
+    
+    /**
+     * \brief Dump the characteristics of an element into the file.
+     *
+     * \param[in] device Device reference.
+     * \param[in] element Device element.
+     * \param[in] id The element index (for printing in the file).
+     */
     void DumpElement( IOHIDDeviceRef myDevice, IOHIDElementRef element, size_t id );
+    
+    /**
+     * \brief Close the DumpJoystick object (and the corresponding file).
+     */
     void Close( void );
+    
   private:
     FILE *fh;
     const char * ElemUsageStr( uint32_t inusage );

@@ -85,7 +85,7 @@ public:
    * \brief Poll the joystick POV hats
    *
    * \output vector of POV doubles. The value corresponds to the angle (degrees) and
-   *         65536 corresponds to nothing pressed.
+   *         -1 corresponds to nothing pressed.
    */
   vector<double> PollPOV( void );
 

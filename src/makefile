@@ -1,7 +1,7 @@
 MATLAB64    = /Applications/MATLAB_R2011a.app
 MATLAB32    = /Applications/MATLAB_R2009a.app
 CXX         = g++
-CXXFLAGS    = -O -W -Wall -ansi -pedantic -mmacosx-version-min=10.5 -fno-common -fexceptions -DDEBUG -DERROR_OUT
+CXXFLAGS    = -O -W -Wall -ansi -pedantic -mmacosx-version-min=10.5 -DDEBUG -DERROR_OUT
 ARCH32      = -arch i386
 ARCH64      = -arch x86_64
 CXXM64FLAGS = -I$(MATLAB64)/extern/include -I$(MATLAB64)/simulink/include -DMATLAB_MEX_FILE
