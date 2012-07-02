@@ -35,15 +35,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class POV
 {
   public:
-    POV( IOHIDDeviceRef newDev, IOHIDElementRef newElem );
+    /**
+     * \brief POV (hatswitch) constructor.
+     *
+     * \param[in] device Device reference.
+     * \param[in] element Element reference. The element is expected to be of type
+     *  kIOHIDElementTypeInput_Axis or kIOHIDElementTypeInput_Misc with a Null state (see
+     *  IOHIDElementHasNullState) otherwise the behaviour is undefined.
+     */
+    POV( IOHIDDeviceRef device, IOHIDElementRef element );
+    
+    /**
+     * \brief POV (hatswitch) destructor.
+     */
     ~POV();
+    
+    /**
+     * \brief Read the state of the POV (hatswitch)
+     *
+     * \return Returns the current angle of the POV (hatswitch) in degrees (starting at 0 at
+     *  LogicalMinimum and ending at 360*(length-1)/length at LogicalMaximum. When nothing is
+     *  pressed, -1 is returned, and when there is an error -5 is returned.
+     */
     double ReadState( void );
+    
   private:
-    IOHIDElementRef element;
-    IOHIDDeviceRef device;
-    bool isMultiByte;
+    IOHIDElementRef myElement;
+    IOHIDDeviceRef myDevice;
     double logmax, logmin;
-    size_t length;
 };
 
 #endif

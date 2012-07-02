@@ -27,29 +27,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "pov.hpp"
 
-
-POV::POV( IOHIDDeviceRef newDev, IOHIDElementRef newElem )
+/**
+ * \brief POV (hatswitch) constructor.
+ *
+ * \param[in] device Device reference.
+ * \param[in] element Element reference. The element is expected to be of type
+ *  kIOHIDElementTypeInput_Axis or kIOHIDElementTypeInput_Misc with a Null state (see
+ *  IOHIDElementHasNullState) otherwise the behaviour is undefined.
+ */
+POV::POV( IOHIDDeviceRef device, IOHIDElementRef element )
 {
-  device = newDev;
-  element = newElem;
-  logmax = IOHIDElementGetLogicalMax( element );
-  logmin = IOHIDElementGetLogicalMin( element );
+  // Copy the device and element references to local (object) storage.
+  myDevice = device;
+  myElement = element;
+  // Get the logical maximum and minimum values of the element
+  logmax = IOHIDElementGetLogicalMax( myElement );
+  logmin = IOHIDElementGetLogicalMin( myElement );
 }
 
+/**
+ * \brief POV (hatswitch) destructor.
+ */
 POV::~POV()
 {
 }
 
+/**
+ * \brief Read the state of the POV (hatswitch)
+ *
+ * \return Returns the current angle of the POV (hatswitch) in degrees (starting at 0 at
+ *  LogicalMinimum and ending at 360*(length-1)/length at LogicalMaximum. When nothing is
+ *  pressed, -1 is returned, and when there is an error -5 is returned.
+ */
 double POV::ReadState( void )
 {
-  IOHIDValueRef valref;
-  IOReturn successful = IOHIDDeviceGetValue( device, element, &valref );
-  double value;
-  if( successful == kIOReturnSuccess )
+  // Open the value
+  IOHIDValueRef myValue;
+  IOReturn mySuccess = IOHIDDeviceGetValue( myDevice, myElement, &myValue );
+  if( mySuccess == kIOReturnSuccess )
   {
-    value = double( IOHIDValueGetIntegerValue( valref ) );
-    if( value > logmax || value < logmin ) return 65536.0;
+    // If successful, read the value
+    double value = double( IOHIDValueGetIntegerValue( myValue ) );
+    // If it outside the range (i.e. the NULL state), return -1;
+    if( value > logmax || value < logmin ) return -1.0;
+    // Otherwise, convert to degrees and return.
     else return 360.0*value/(logmax-logmin+1.0);
   }
+  // If unsuccessful opening the value, return -5.
   return -5;
 }
