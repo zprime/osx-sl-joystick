@@ -27,31 +27,56 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "axes.hpp"
 
-Axes::Axes( IOHIDDeviceRef newDev, IOHIDElementRef newElem )
+/**
+ * \brief Initialise the Axes object.
+ *
+ * \param[in] device Device reference.
+ * \param[in] element Element reference. The element must be of type
+ *  kIOHIDElementTypeInput_Axis or kIOHIDElementTypeInput_Misc otherwise the behaviour
+ *  is undefined.
+ */
+Axes::Axes( IOHIDDeviceRef device, IOHIDElementRef element )
 {
-  device = newDev;
-  element = newElem;
-  logmax = IOHIDElementGetLogicalMax( element );
-  logmin = IOHIDElementGetLogicalMin( element );
-  isRelative = IOHIDElementIsRelative( element );
+  // Copy the device and element to local (object) storage
+  myDevice = device;
+  myElement = element;
+  // Get the (logical) max and min of the element
+  logmax = IOHIDElementGetLogicalMax( myElement );
+  logmin = IOHIDElementGetLogicalMin( myElement );
+  // Is it relative?
+  isRelative = IOHIDElementIsRelative( myElement );
 }
 
+/**
+ * \brief Axes destructor.
+ */
 Axes::~Axes(){}
 
+/**
+ * \brief Read the state of the axes as a normalised double.
+ *
+ * \return Normalised state of the axis. -1 corresponds to LogicalMinimum and +1
+ *   corresponds to LogicalMaximum. Returns -5 if there is an error opening the value.
+ */
 double Axes::ReadState( void )
 {
-  IOHIDValueRef valref;
-  IOReturn successful = IOHIDDeviceGetValue( device, element, &valref );
-  if( successful == kIOReturnSuccess )
+  // Try opening the value
+  IOHIDValueRef myValue;
+  IOReturn mySuccess = IOHIDDeviceGetValue( myDevice, myElement, &myValue );
+  if( mySuccess == kIOReturnSuccess )
   {
+    // If successful, read the value.
     double value;
-    value = double( IOHIDValueGetIntegerValue( valref ) );
+    value = double( IOHIDValueGetIntegerValue( myValue ) );
+    // If it is relative, accumulate the value
     if( isRelative )
     {
       value += lastVal;
       lastVal = value;
     }
+    // Normalise and return the result
     return 2*value/(logmax-logmin) - 1;
   }
+  // Return -5 for a value opening error
   return -5;
 }

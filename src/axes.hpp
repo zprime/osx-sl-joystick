@@ -35,15 +35,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Axes
 {
   public:
-    Axes( IOHIDDeviceRef newDev, IOHIDElementRef newElem );
+    /**
+     * \brief Initialise the Axes object.
+     *
+     * \param[in] device Device reference.
+     * \param[in] element Element reference. The element must be of type
+     *  kIOHIDElementTypeInput_Axis or kIOHIDElementTypeInput_Misc otherwise the behaviour
+     *  is undefined.
+     */
+    Axes( IOHIDDeviceRef device, IOHIDElementRef element );
+    
+    /**
+     * \brief Axes destructor.
+     */
     ~Axes();
+    
+    /**
+     * \brief Read the state of the axes as a normalised double.
+     *
+     * \return Normalised state of the axis. -1 corresponds to LogicalMinimum and +1
+     *   corresponds to LogicalMaximum. Returns -5 if there is an error opening the value.
+     */
     double ReadState( void );
+    
   private:
-    IOHIDElementRef element;
-    IOHIDDeviceRef device;
+    IOHIDElementRef myElement;
+    IOHIDDeviceRef myDevice;
     double logmax, logmin, lastVal;
-    bool isMultiByte, isRelative;
-    size_t length;
+    bool isRelative;
 };
 
 #endif
