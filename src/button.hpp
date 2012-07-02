@@ -35,12 +35,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Button
 {
   public:
-    Button( IOHIDDeviceRef newDev, IOHIDElementRef newElem );
+    /**
+     * \brief Button constructor.
+     *
+     * \param[in] device Device reference.
+     * \param[in] element Element reference.
+     *
+     * Takes an IOHIDDeviceRef and an IOHIDElementRef. The IOHIDElementRef must be of type
+     * kIOHIDElementTypeInput_Button otherwise the behaviour is undefined.
+     */
+    Button( IOHIDDeviceRef device, IOHIDElementRef element );
+    
+    /**
+     * \brief Button destructor.
+     */
     ~Button();
+    
+    /**
+     * \brief Reads the state of the button element.
+     *
+     * \return Boolean button state.
+     */
     bool ReadState( void );
+  
   private:
-    IOHIDElementRef element;
-    IOHIDDeviceRef device;
+    IOHIDElementRef myElement;
+    IOHIDDeviceRef myDevice;
 };
 
 #endif

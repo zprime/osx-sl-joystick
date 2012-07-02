@@ -27,23 +27,44 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "button.hpp"
 
-Button::Button( IOHIDDeviceRef newDev, IOHIDElementRef newElem )
+/**
+ * \brief Button constructor.
+ *
+ * \param[in] device Device reference.
+ * \param[in] element Element reference.
+ *
+ * Takes an IOHIDDeviceRef and an IOHIDElementRef. The IOHIDElementRef must be of type
+ * kIOHIDElementTypeInput_Button otherwise the behaviour is undefined.
+ */
+Button::Button( IOHIDDeviceRef device, IOHIDElementRef element )
 {
-  device = newDev;
-  element = newElem;
+  // Copy device and element to local (object) storage
+  myDevice = device;
+  myElement = element;
 }
-    
+
+/**
+ * \brief Button destructor.
+ */
 Button::~Button( void )
 {
 }
 
+/**
+ * \brief Reads the state of the button element.
+ *
+ * \return Boolean button state.
+ */
 bool Button::ReadState( void )
 {
-  IOHIDValueRef valref;
-  IOReturn successful = IOHIDDeviceGetValue( device, element, &valref );
-  if( successful == kIOReturnSuccess )
+  // Get the value
+  IOHIDValueRef myVal;
+  IOReturn mySuccess = IOHIDDeviceGetValue( myDevice, myElement, &myVal );
+  // If successful, return the state of the button
+  if( mySuccess == kIOReturnSuccess )
   {
-    return (bool)IOHIDValueGetIntegerValue( valref );
+    return (bool)IOHIDValueGetIntegerValue( myVal );
   }
+  // Otherwise, return false.
   return false;
 }
