@@ -211,10 +211,10 @@ vector<int> Joystick::QueryIO( void )
   vector<int> result(4,-1);
   if( myElements != NULL )
   {
-    result[0] = myAxes.size();
-    result[1] = myButtons.size();
-    result[2] = myPOV.size();
-    result[3] = 0;
+    result[ kJoystick_Axes ] = myAxes.size();
+    result[ kJoystick_Buttons ] = myButtons.size();
+    result[ kJoystick_POVs ] = myPOV.size();
+    result[ kJoystick_Outputs ] = 0;
   }
   return result;
 }

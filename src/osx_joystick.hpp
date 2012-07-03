@@ -38,6 +38,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace std;
 
+/**
+ * \brief Enumerated indices for the QueryIO vector.
+ */
+enum JoystickIOIndex {
+  kJoystick_Axes = 0,
+  kJoystick_Buttons,
+  kJoystick_POVs,
+  kJoystick_Outputs
+};
+
 class Joystick
 {
 public:

@@ -10,7 +10,19 @@ LDFLAGS   = -framework IOKit -framework CoreFoundation
 LM64FLAGS = -O -Wl,-twolevel_namespace -undefined error -bundle -Wl,-exported_symbols_list,$(MATLAB64)/extern/lib/maci64/mexFunction.map -L$(MATLAB64)/bin/maci64 -lmx -lmex -lmat -lstdc++
 LM32FLAGS = -O -Wl,-twolevel_namespace -undefined error -bundle -Wl,-exported_symbols_list,$(MATLAB32)/extern/lib/maci/mexFunction.map -L$(MATLAB32)/bin/maci -lmx -lmex -lmat -lstdc++
 
-all: JoystickGetAvailable.mexmaci64 JoystickGetAvailable.mexmaci test
+all: JoystickGetAvailable.mexmaci64 JoystickGetAvailable.mexmaci sfun_osx_joystick.mexmaci64 sfun_osx_joystick.mexmaci test
+
+sfun_osx_joystick.mexmaci64: sfun_osx_joystick.o64 osx_joystick.o64 button.o64 axes.o64 pov.o64 dumpjoystick.o64
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LM64FLAGS) $(ARCH64)
+
+sfun_osx_joystick.mexmaci: sfun_osx_joystick.o32 osx_joystick.o32 button.o32 axes.o32 pov.o32 dumpjoystick.o32
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LM32FLAGS) $(ARCH32)	
+
+sfun_osx_joystick.o64: sfun_osx_joystick.cpp osx_joystick.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(CXXM64FLAGS) $(ARCH64) $<
+	
+sfun_osx_joystick.o32: sfun_osx_joystick.cpp osx_joystick.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(CXXM32FLAGS) $(ARCH32) $<
 
 JoystickGetAvailable.mexmaci: JoystickGetAvailable.o32 osx_joystick.o32 button.o32 axes.o32 pov.o32 dumpjoystick.o32
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LM32FLAGS) $(ARCH32)
@@ -67,4 +79,4 @@ clean:
 	rm *.o *.o32 *.o64
 
 cleanest: clean
-	rm test JoystickGetAvailable.mexmaci64 JoystickGetAvailable.mexmaci
+	rm *.mexmaci64 *.mexmaci
