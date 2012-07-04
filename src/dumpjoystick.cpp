@@ -32,13 +32,61 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * \param[in] filename File name to dump the joystick info to.
  */
-DumpJoystick::DumpJoystick( const char * filename )
+DumpJoystick::DumpJoystick( const char * filename, IOHIDDeviceRef device )
 {
   // Open the file and write the header.
   fh = fopen( filename, "w+" );
   if( fh==NULL ) fprintf(stderr,"Failed to open file: %s\n",filename);
   else
   {
+    CFTypeRef prodRef = IOHIDDeviceGetProperty( (IOHIDDeviceRef)device, CFSTR(kIOHIDProductKey) );
+    if( prodRef == NULL ) fprintf(fh,"ProductKey: NULL\n");
+    else
+    {
+      if( CFGetTypeID(prodRef) == CFStringGetTypeID() )
+      {
+        char buffer[256];
+        CFStringGetCString( (CFStringRef)prodRef, buffer,  sizeof(buffer), kCFStringEncodingUTF8 );
+        fprintf(fh,"ProductKey: %s\n",buffer);
+      }
+    }
+    
+    CFTypeRef serialRef = IOHIDDeviceGetProperty( device, CFSTR(kIOHIDSerialNumberKey) );
+    if( serialRef == NULL ) fprintf(fh,"SerialKey: NULL\n");
+    else
+    {
+      if( CFGetTypeID(serialRef) == CFStringGetTypeID() )
+      {
+        char buffer[256];
+        CFStringGetCString( (CFStringRef)serialRef, buffer, sizeof(buffer), kCFStringEncodingUTF8 );
+        fprintf(fh,"SerialKey: %s\n",buffer);
+      }
+    }
+  
+    CFTypeRef transRef = IOHIDDeviceGetProperty( device, CFSTR(kIOHIDTransportKey) );
+    if( transRef == NULL ) fprintf(fh,"TransportKey: NULL\n");
+    else
+    {
+      if( CFGetTypeID(transRef) == CFStringGetTypeID() )
+      {
+        char buffer[256];
+        CFStringGetCString( (CFStringRef)transRef, buffer, sizeof(buffer), kCFStringEncodingUTF8 );
+        fprintf(fh,"TransportKey: %s\n",buffer);
+      }
+    }
+  
+    CFTypeRef locRef = IOHIDDeviceGetProperty( device, CFSTR(kIOHIDLocationIDKey) );
+    if( locRef == NULL ) fprintf(fh,"LocationKey: NULL\n");
+    else
+    {
+      if( CFGetTypeID(locRef) == CFNumberGetTypeID() )
+      { 
+        int32_t loc;
+        CFNumberGetValue( (CFNumberRef)locRef, kCFNumberSInt32Type, (void *)&loc );
+        fprintf(fh,"LocationKey: 0x%x\n", loc );
+      }
+    }
+  
     fprintf(fh, "  ID           TYPE        USAGE    UID LMAX LMIN LEN IV HN HP IA  U UE NL IR IW RID RC RS\n");
   }
 }

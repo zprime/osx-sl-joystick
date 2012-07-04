@@ -46,6 +46,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 /**
+ * \brief Not a member of Joystick, instead a compare function for sorting JoyDevs.
+ */
+bool JoyDevCompare( JoyDev i, JoyDev j )
+{
+  return ( i.locationKey < j.locationKey );
+}
+
+/**
  * \brief Joystick constructor
  */
  Joystick::Joystick()
@@ -92,7 +100,9 @@ bool Joystick::Initialise( size_t joyid )
     ERR_PRINTF("Failed to initialise the IO HID Manager.\n");
     return false;
   }
+#ifdef DEBUG
   else DBG_PRINTF("Joystick::Initialise - Successfully opened the IO HID Manager.\n");
+#endif
   
   // Clear the output, buttons and axes storage
   if( !myButtons.empty() )
@@ -145,8 +155,8 @@ bool Joystick::Initialise( size_t joyid )
   }
 
 #ifdef DEBUG
-  vector<string> devnames = QueryDeviceNames();
-  DumpJoystick dj( devnames[ joyid ].c_str() );
+  vector<JoyDev> devnames = QueryAvailableDevices();
+  DumpJoystick dj( (devnames[ joyid ]).productKey.c_str(), myDevice );
 #endif
   
   // Loop through elements
@@ -284,12 +294,11 @@ void Joystick::PushInputs( vector<double> normInputs )
 /**
  * \brief Query for the available device names
  *
- * \output vector of device name strings. If no devices are available, the vector is
- *         empty.
+ * \output vector JoyDev devices (which contain Product names and location values).
  */
-vector<string> Joystick::QueryDeviceNames( void )
+vector<JoyDev> Joystick::QueryAvailableDevices( void )
 {
-  vector<string> result;
+  vector<JoyDev> result;
   
   // Open the IO HID manager (sub-function tests whether it is already open already)
   if( !InitialiseJoyManager() )
@@ -315,6 +324,8 @@ vector<string> Joystick::QueryDeviceNames( void )
   // Loop through the devices, and add them to the output vector
   for( CFIndex ii=0; ii<numDevices; ii++ )
   {
+    JoyDev thisDev;
+  
     // Extract the Product Key string
     CFTypeRef devProdRef = IOHIDDeviceGetProperty( (IOHIDDeviceRef)devices[ii],
                                                                 CFSTR(kIOHIDProductKey) );
@@ -328,13 +339,40 @@ vector<string> Joystick::QueryDeviceNames( void )
       CFStringGetCString( (CFStringRef)devProdRef, buffer,  sizeof(buffer),
                                                                   kCFStringEncodingUTF8 );
       string devStr(buffer);
-      result.push_back( devStr );
+      thisDev.productKey = devStr;
     }
     else
     {
       ERR_PRINTF("Device returned a product key that wasn't a string.");
     }
+    CFTypeRef locRef = IOHIDDeviceGetProperty( (IOHIDDeviceRef)devices[ii],
+                                                             CFSTR(kIOHIDLocationIDKey) );
+    if( locRef == NULL )
+    {
+      ERR_PRINTF("Device returned a NULL location key.");
+    }
+    else if( CFGetTypeID( (CFNumberRef)locRef) == CFNumberGetTypeID() )
+    {
+      if( CFNumberGetType( (CFNumberRef)locRef) == kCFNumberSInt32Type )
+      {
+        uint32_t devLocInt;
+        CFNumberGetValue( (CFNumberRef)locRef, kCFNumberSInt32Type, (void *)&devLocInt );
+        thisDev.locationKey = devLocInt;
+      }
+      else
+      {
+        ERR_PRINTF("Device returned a location key that wasn't an int32.");
+      }
+    }
+    else
+    {
+      ERR_PRINTF("Device returned a location key that wasn't a number.");
+    }
+  result.push_back( thisDev );
   }
+  
+  // Now sort the values before returning them.
+  sort( result.begin(), result.end(), JoyDevCompare );
   return result;
 }
   

@@ -79,4 +79,4 @@ clean:
 	rm *.o *.o32 *.o64
 
 cleanest: clean
-	rm *.mexmaci64 *.mexmaci
+	rm test *.mexmaci64 *.mexmaci

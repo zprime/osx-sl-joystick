@@ -97,9 +97,9 @@ static void mdlCheckParameters(SimStruct *S)
   }
   // Make sure the sampling time is positive
   real_T Ts = mxGetScalar( pVal );
-  if( Ts < 0.0 )
+  if( (Ts < 0.0) & (Ts != -1.0)  )
   {
-    ssSetErrorStatus( S, "sfun-osx-joystick::mdlCheckParameters Sample time must be positive." );
+    ssSetErrorStatus( S, "sfun-osx-joystick::mdlCheckParameters Sample time must be positive, or -1 for inherited." );
     return;
   }
 }
@@ -282,10 +282,8 @@ static void mdlStart(SimStruct *S)
   ssGetPWork(S)[1] = (vector<int> *) &JoyIO;
 }
 
-/* Function: mdlOutputs =======================================================
- * Abstract:
- *    In this function, you compute the outputs of your S-function
- *    block.
+/**
+ * \brief Read the Joystick states and output them.
  */
 static void mdlOutputs(SimStruct *S, int_T tid)
 {

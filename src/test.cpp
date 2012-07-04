@@ -35,10 +35,10 @@ int main( void )
 
   cout << "Number of available devices: " << myJoy.QueryNumberDevices() << '\n';
   
-  vector<string> devs = myJoy.QueryDeviceNames();
+  vector<JoyDev> devs = myJoy.QueryAvailableDevices();
   for( size_t ii=0; ii<devs.size(); ii++ )
   {
-    cout << "Device " << ii << ": " << devs.at(ii) << '\n';
+    cout << "Device " << ii << ": " << (devs[ii]).productKey << '\n';
   }
   
   if( myJoy.Initialise( -1 ) ) cout << "Unexpected true initialisation for -1 device.\n";

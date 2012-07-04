@@ -3,8 +3,6 @@
 #include "osx_joystick.hpp"
 #include <vector>
 #include <string>
-#include <sstream>
-#include <iostream>
 
 #define UNUSED(x) (void)(x)
 
@@ -21,18 +19,30 @@ void mexFunction( int nlhs, mxArray *plhs[],
   
   // Open the joystick, and get the names of all available devices
   Joystick myJoy;
-  mwSize numJoys = (unsigned int)myJoy.QueryNumberDevices();
-  vector<string> JoyNames = myJoy.QueryDeviceNames();
+  mwSize numJoys[2];
+  numJoys[0] = (unsigned int)myJoy.QueryNumberDevices();
+  numJoys[1] = 2;
+  vector<JoyDev> AvailJoyDevs = myJoy.QueryAvailableDevices();
   
   // Create the cell output array
-  plhs[0] = mxCreateCellArray( 1, &numJoys );
+  plhs[0] = mxCreateCellArray( 2, numJoys );
+  
+  mwIndex cellID, subs[2];
+  const mwSize keySize = 1;
   
   // Loop through the joystick names, and add them to the cell output
-  for( mwSize ii=0; ii<numJoys; ii++ )
+  for( mwSize ii=0; ii<AvailJoyDevs.size(); ii++ )
   {
-    stringstream identifier( stringstream::in|stringstream::out );
-    identifier << ii << ": " << JoyNames[ii].c_str();
-    mxArray *str = mxCreateString( identifier.str().c_str() );
-    mxSetCell( plhs[0], ii, str );
+    mxArray *str = mxCreateString( AvailJoyDevs[ii].productKey.c_str() );
+    mxArray *id = mxCreateNumericArray( 1, &keySize, mxINT32_CLASS, mxREAL );
+    int32_T *idPtr = (int32_T *)mxGetData( id );
+    *idPtr = AvailJoyDevs[ii].locationKey;
+    subs[0] = ii;
+    subs[1] = 0;
+    cellID = mxCalcSingleSubscript( plhs[0], 2, subs );
+    mxSetCell( plhs[0], cellID, str );
+    subs[1] = 1;
+    cellID = mxCalcSingleSubscript( plhs[0], 2, subs );
+    mxSetCell( plhs[0], cellID, id );
   }
 }

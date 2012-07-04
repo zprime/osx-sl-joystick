@@ -43,7 +43,7 @@ class DumpJoystick
      *
      * \param[in] filename File name to dump the joystick info to.
      */
-    DumpJoystick( const char * filename );
+    DumpJoystick( const char * filename, IOHIDDeviceRef device );
     
     /**
      * \brief DumpJoystick deconstructor.

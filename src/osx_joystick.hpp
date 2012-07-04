@@ -48,6 +48,13 @@ enum JoystickIOIndex {
   kJoystick_Outputs
 };
 
+class JoyDev
+{
+  public:
+    string productKey;
+    int32_t locationKey;
+};
+
 class Joystick
 {
 public:
@@ -107,9 +114,9 @@ public:
   /**
    * \brief Query for the available device names
    *
-   * \output vector of device name strings, or NULL if no devices are available
+   * \output vector JoyDev devices (which contain Product names and location values).
    */
-  vector<string> QueryDeviceNames( );
+  vector<JoyDev> QueryAvailableDevices( );
   
   /**
    * \brief Query for the number of available devices
