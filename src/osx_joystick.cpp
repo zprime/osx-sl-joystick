@@ -89,11 +89,12 @@ Joystick::~Joystick()
  /**
   * \brief Initialise the Joystick
   * 
-  * \input joyid - Joystick ID to open
+  * \param[in] joyLocation LocationKey of the selected Joystick. These can be obtained
+  *                        from the QueryAvailableDevices function.
   *
   * \return true if successful, false if unsuccessful (such as the joystick doesn't exist)
   */
-bool Joystick::Initialise( size_t joyid )
+bool Joystick::Initialise( int32_t joyLocation )
 {
   if( !InitialiseJoyManager() )
   {
@@ -105,10 +106,9 @@ bool Joystick::Initialise( size_t joyid )
 #endif
   
   // Clear the output, buttons and axes storage
-  if( !myButtons.empty() )
-  {
-    myButtons.erase( myButtons.begin(), myButtons.end() );
-  }
+  if( !myButtons.empty() ) myButtons.erase( myButtons.begin(), myButtons.end() );
+  if( !myAxes.empty() ) myAxes.erase( myAxes.begin(), myAxes.end() );
+  if( !myPOV.empty() ) myPOV.erase( myPOV.begin(), myPOV.end() );
   
   // Open the device references
   CFSetRef deviceRefs = IOHIDManagerCopyDevices(myManager);
@@ -119,11 +119,10 @@ bool Joystick::Initialise( size_t joyid )
   // Number of available devices
   CFIndex numDevices = CFSetGetCount( deviceRefs );
   
-  // Check to make sure the asked for device exists
-  if( joyid >= (size_t)numDevices )
+  // Check to make sure at least some devices are available.
+  if( (size_t)numDevices < 1 )
   {
-    DBG_PRINTF("Joystick::Initialise - Asked for device %i, but only %i devices are available.\n",
-                                                            (int)joyid, (int)numDevices );
+    DBG_PRINTF("Joystick::Initialise - No devices to initialise.\n" );
     CFRelease( deviceRefs );
     return false;
   }
@@ -133,8 +132,23 @@ bool Joystick::Initialise( size_t joyid )
   CFSetGetValues( deviceRefs, &devices.front() );
   CFRelease( deviceRefs );
   
-  // Isolate the selected device
-  myDevice = (IOHIDDeviceRef)devices[ joyid ];
+  // Loop through all devices, checking for a matching LocationKey. This isn't the ideal
+  // way of doing it, but since the expected number of devices will only ever be small,
+  // it should suffice.
+  myDevice = NULL;
+  for( size_t ii=0; ii<(size_t)numDevices; ii++ )
+  {
+    if( joyLocation == GetLocationKey( (IOHIDDeviceRef)devices[ii] ) )
+    {
+      myDevice = (IOHIDDeviceRef)devices[ii];
+      break;
+    }
+  }
+  if( myDevice == NULL )
+  {
+    DBG_PRINTF("Requested device could not be found.\n");
+    return false;
+  }
   
   myElements = IOHIDDeviceCopyMatchingElements( myDevice, NULL, kIOHIDOptionsTypeNone );
   // Test to make sure elements are valid                                                                
@@ -155,8 +169,8 @@ bool Joystick::Initialise( size_t joyid )
   }
 
 #ifdef DEBUG
-  vector<JoyDev> devnames = QueryAvailableDevices();
-  DumpJoystick dj( (devnames[ joyid ]).productKey.c_str(), myDevice );
+  string thisName = GetProductKey( myDevice );
+  DumpJoystick dj( thisName.c_str(), myDevice );
 #endif
   
   // Loop through elements
@@ -325,50 +339,9 @@ vector<JoyDev> Joystick::QueryAvailableDevices( void )
   for( CFIndex ii=0; ii<numDevices; ii++ )
   {
     JoyDev thisDev;
-  
-    // Extract the Product Key string
-    CFTypeRef devProdRef = IOHIDDeviceGetProperty( (IOHIDDeviceRef)devices[ii],
-                                                                CFSTR(kIOHIDProductKey) );
-    if( devProdRef == NULL )
-    {
-      ERR_PRINTF("Device returned a NULL product key.");
-    }
-    else if( CFGetTypeID(devProdRef) == CFStringGetTypeID() )
-    {
-      char buffer[256];
-      CFStringGetCString( (CFStringRef)devProdRef, buffer,  sizeof(buffer),
-                                                                  kCFStringEncodingUTF8 );
-      string devStr(buffer);
-      thisDev.productKey = devStr;
-    }
-    else
-    {
-      ERR_PRINTF("Device returned a product key that wasn't a string.");
-    }
-    CFTypeRef locRef = IOHIDDeviceGetProperty( (IOHIDDeviceRef)devices[ii],
-                                                             CFSTR(kIOHIDLocationIDKey) );
-    if( locRef == NULL )
-    {
-      ERR_PRINTF("Device returned a NULL location key.");
-    }
-    else if( CFGetTypeID( (CFNumberRef)locRef) == CFNumberGetTypeID() )
-    {
-      if( CFNumberGetType( (CFNumberRef)locRef) == kCFNumberSInt32Type )
-      {
-        uint32_t devLocInt;
-        CFNumberGetValue( (CFNumberRef)locRef, kCFNumberSInt32Type, (void *)&devLocInt );
-        thisDev.locationKey = devLocInt;
-      }
-      else
-      {
-        ERR_PRINTF("Device returned a location key that wasn't an int32.");
-      }
-    }
-    else
-    {
-      ERR_PRINTF("Device returned a location key that wasn't a number.");
-    }
-  result.push_back( thisDev );
+    thisDev.productKey = GetProductKey( (IOHIDDeviceRef)devices[ii] );
+    thisDev.locationKey = GetLocationKey( (IOHIDDeviceRef)devices[ii] );
+    result.push_back( thisDev );
   }
   
   // Now sort the values before returning them.
@@ -402,7 +375,6 @@ unsigned int Joystick::QueryNumberDevices( void )
   
   // Otherwise return the number of devices
   return devCount;
-  
 }
 
 /**
@@ -487,4 +459,70 @@ bool Joystick::InitialiseJoyManager( void )
   CFRelease( myMatching );
 
   return true;
+}
+
+/**
+ * \brief Returns the LocationKey of the input device.
+ *
+ * \param[in] dev Device to extract the LocationKey from.
+ * \return LocationKey, or 0 if there was an error.
+ */
+int32_t Joystick::GetLocationKey( IOHIDDeviceRef dev )
+{
+  CFTypeRef locRef = IOHIDDeviceGetProperty( dev, CFSTR(kIOHIDLocationIDKey) );
+  if( locRef == NULL )
+  {
+    ERR_PRINTF("Device returned a NULL location key.");
+    return 0;
+  }
+  else if( CFGetTypeID( (CFNumberRef)locRef) == CFNumberGetTypeID() )
+  {
+    if( CFNumberGetType( (CFNumberRef)locRef) == kCFNumberSInt32Type )
+    {
+      int32_t devLocInt;
+      CFNumberGetValue( (CFNumberRef)locRef, kCFNumberSInt32Type, (void *)&devLocInt );
+      return devLocInt;
+    }
+    else
+    {
+      ERR_PRINTF("Device returned a location key that wasn't an int32.");
+      return 0;
+    }
+  }
+  else
+  {
+    ERR_PRINTF("Device returned a location key that wasn't a number.");
+    return 0;
+  }
+}
+
+/**
+ * \brief Returns the ProductKey for the input device.
+ * \param[in] dev Device to extract the ProductKey from.
+ * \return A string object with the ProductKey in it. The string may be empty if the
+ *         there was an error (or the device doesn't have a product key).
+ */
+string Joystick::GetProductKey( IOHIDDeviceRef dev )
+{
+  string devStr;
+  // Extract the Product Key string
+  CFTypeRef devProdRef = IOHIDDeviceGetProperty( dev, CFSTR(kIOHIDProductKey) );
+  if( devProdRef == NULL )
+  {
+    ERR_PRINTF("Device returned a NULL product key.");
+    return devStr;
+  }
+  else if( CFGetTypeID(devProdRef) == CFStringGetTypeID() )
+  {
+    char buffer[256];
+    CFStringGetCString( (CFStringRef)devProdRef, buffer,  sizeof(buffer),
+                                                                kCFStringEncodingUTF8 );
+    devStr.append( buffer );
+    return devStr;
+  }
+  else
+  {
+    ERR_PRINTF("Device returned a product key that wasn't a string.");
+    return devStr;
+  }
 }

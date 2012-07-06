@@ -41,17 +41,14 @@ int main( void )
     cout << "Device " << ii << ": " << (devs[ii]).productKey << '\n';
   }
   
-  if( myJoy.Initialise( -1 ) ) cout << "Unexpected true initialisation for -1 device.\n";
-  
   if( myJoy.QueryNumberDevices() == 0 )
   {
     cout << "Zero devices detected. Trying to initialise anyway (for kicks).\n";
     if( myJoy.Initialise( 0 ) ) cout << "Unexpected true initialisation with 0 devices.\n";
-    if( myJoy.Initialise( 1 ) ) cout << "Unexpected true initialisation with the 1 device.\n";
   }
   else
   {
-    if( myJoy.Initialise( 0 ) )
+    if( myJoy.Initialise( (devs[0]).locationKey ) )
     {
       cout << "Successfully initialised device 0.\n";
       vector<int> capabilities = myJoy.QueryIO();

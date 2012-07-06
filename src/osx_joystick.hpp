@@ -71,11 +71,12 @@ public:
   /**
    * \brief Initialise the Joystick
    * 
-   * \input joyid - Joystick ID to open
+   * \param[in] joyLocation LocationKey of the selected Joystick. These can be obtained
+   *                        from the QueryAvailableDevices function.
    *
    * \return true if successful, false if unsuccessful (such as the joystick doesn't exist)
    */
-  bool Initialise( size_t joyid );
+  bool Initialise( int32_t joyLocation );
   
   /**
    * \brief Query joystick for IO capabilities
@@ -140,6 +141,22 @@ private:
    * \output true if successful, false if unsuccessful.
    */
   bool InitialiseJoyManager( );
+  
+  /**
+   * \brief Returns the LocationKey of the input device.
+   *
+   * \param[in] dev Device to extract the LocationKey from.
+   * \return LocationKey, or 0 if there was an error.
+   */
+  int32_t GetLocationKey( IOHIDDeviceRef dev );
+
+  /**
+   * \brief Returns the ProductKey for the input device.
+   * \param[in] dev Device to extract the ProductKey from.
+   * \return A string object with the ProductKey in it. The string may be empty if the
+   *         there was an error (or the device doesn't have a product key).
+   */
+  string GetProductKey( IOHIDDeviceRef dev );
 
 };
 
