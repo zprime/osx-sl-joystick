@@ -41,6 +41,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define IS_PARAM_DOUBLE(pVal) ( mxIsNumeric(pVal) && !mxIsLogical(pVal) &&\
     !mxIsEmpty(pVal) && !mxIsSparse(pVal) && !mxIsComplex(pVal) && mxIsDouble(pVal) &&\
      (mxGetNumberOfElements(pVal)==1) )
+     
+#define IS_PARAM_INT32(pVal) ( mxIsNumeric(pVal) && !mxIsLogical(pVal) &&\
+    !mxIsEmpty(pVal) && !mxIsSparse(pVal) && !mxIsComplex(pVal) &&\
+    mxIsClass(pVal,"int32") && (mxGetNumberOfElements(pVal)==1) )
 
 /*==================== S-function methods ====================*/
 
@@ -62,29 +66,20 @@ static void mdlCheckParameters(SimStruct *S)
   }
   const mxArray *pVal;
   
-  // Make sure the Joystick ID is a scalar double.
+  // Make sure that the Joystick LocationKey is an int32
   pVal = ssGetSFcnParam( S, P_JOYID );
-  if ( !IS_PARAM_DOUBLE( pVal ) )
+  if ( !IS_PARAM_INT32( pVal ) )
   {
-    ssSetErrorStatus(S, "sfun-osx-joystick::mdlCheckParameters Joystick ID must be a scalar double.");
+    ssSetErrorStatus(S, "sfun-osx-joystick::mdlCheckParameters Joystick ID must be an int32.");
     return;
   }
   
   // Make sure the appropriate device is available.
+  int32_t locKey = int32_t( mxGetScalar( pVal ) );
   Joystick myJoy;
-  int numDevices = (int)( myJoy.QueryNumberDevices() );
-  int devId = int( mxGetScalar( pVal ) );
-  if( devId < -1 )
+  if( !myJoy.Initialise( locKey ) )
   {
-    ssSetErrorStatus(S,"sfun-osx-joystick::mdlCheckParameters Joystick ID must be positive.");
-    return;
-  }
-  if( devId >= numDevices )
-  {
-    if( devId > 65535 ) devId = -1;
-    static char msg[256];
-    sprintf( msg, "sfun-osx-joystick::mdlCheckParameters Device %i does not exist.", devId );
-    ssSetErrorStatus( S, msg );
+    ssSetErrorStatus( S, "sfun-osx-joystick::mdlCheckParameters Selected Joystick is not available.");
     return;
   }
   
@@ -114,13 +109,10 @@ static void mdlInitializeSizes(SimStruct *S)
 {
   // Initialise the joystick, so we can retrieve its IO capabilities
   Joystick myJoy;
-  int joyId = int( mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ) );
-  if( !myJoy.Initialise( joyId ) )
+  int32_t locKey = int32_t( mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ) );
+  if( !myJoy.Initialise( locKey ) )
   {
-    static char msg[256];
-    if( joyId > 65535 ) joyId = -1;
-    sprintf(msg,"sfun-osx-joystick::mdlInitializeSizes Joystick %i does not exist or couldn't be initialised.", joyId );
-    ssSetErrorStatus( S, msg );
+    ssSetErrorStatus( S, "sfun-osx-joystick::mdlInitializeSizes Selected Joystick does not exist or couldn't be initialised." );
     return;
   }
   // Retrieve IO capability information from the joystick.
