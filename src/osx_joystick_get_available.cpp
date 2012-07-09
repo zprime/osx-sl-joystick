@@ -11,10 +11,10 @@ void mexFunction( int nlhs, mxArray *plhs[],
                      int nrhs, const mxArray *prhs[] )
 {
   // Sanity check the inputs.
-  if( nrhs != 0 ) mexWarnMsgIdAndTxt( "JoystickGetAvailable:NonEmptyInput",
-                             "Ignoring input to JoystickGetAvailable.\n" );
-  if( nlhs > 1 ) mexErrMsgIdAndTxt( "JoystickGetAvailable:TooManyOutputs",
-                   "Too many output arguments to JoystickGetAvailable.\n");
+  if( nrhs != 0 ) mexWarnMsgIdAndTxt( "osx_joystick_get_available:NonEmptyInput",
+                             "Ignoring input.\n" );
+  if( nlhs > 1 ) mexErrMsgIdAndTxt( "osx_joystick_get_available:TooManyOutputs",
+                   "Too many output arguments.\n");
   UNUSED( prhs );
   
   // Open the joystick, and get the names of all available devices

@@ -10,7 +10,7 @@ LDFLAGS   = -framework IOKit -framework CoreFoundation
 LM64FLAGS = -O -Wl,-twolevel_namespace -undefined error -bundle -Wl,-exported_symbols_list,$(MATLAB64)/extern/lib/maci64/mexFunction.map -L$(MATLAB64)/bin/maci64 -lmx -lmex -lmat -lstdc++
 LM32FLAGS = -O -Wl,-twolevel_namespace -undefined error -bundle -Wl,-exported_symbols_list,$(MATLAB32)/extern/lib/maci/mexFunction.map -L$(MATLAB32)/bin/maci -lmx -lmex -lmat -lstdc++
 
-all: osx_joystick_get_available.mexmaci64 osx_joystick_get_available.mexmaci sfun_osx_joystick.mexmaci64 sfun_osx_joystick.mexmaci test
+all: osx_joystick_get_available.mexmaci64 osx_joystick_get_available.mexmaci osx_joystick_get_capabilities.mexmaci64 osx_joystick_get_capabilities.mexmaci sfun_osx_joystick.mexmaci64 sfun_osx_joystick.mexmaci test
 
 sfun_osx_joystick.mexmaci64: sfun_osx_joystick.o64 osx_joystick.o64 button.o64 axes.o64 pov.o64 dumpjoystick.o64
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LM64FLAGS) $(ARCH64)
@@ -23,6 +23,18 @@ sfun_osx_joystick.o64: sfun_osx_joystick.cpp osx_joystick.hpp
 	
 sfun_osx_joystick.o32: sfun_osx_joystick.cpp osx_joystick.hpp
 	$(CXX) -c -o $@ $(CXXFLAGS) $(CXXM32FLAGS) $(ARCH32) $<
+
+osx_joystick_get_capabilities.mexmaci: osx_joystick_get_capabilities.o32 osx_joystick.o32 button.o32 axes.o32 pov.o32 dumpjoystick.o32
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LM32FLAGS) $(ARCH32)
+
+osx_joystick_get_capabilities.mexmaci64: osx_joystick_get_capabilities.o64 osx_joystick.o64 button.o64 axes.o64 pov.o64 dumpjoystick.o64
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LM64FLAGS) $(ARCH64)
+
+osx_joystick_get_capabilities.o32: osx_joystick_get_capabilities.cpp osx_joystick.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(CXXM32FLAGS) $(ARCH32) $<	
+
+osx_joystick_get_capabilities.o64: osx_joystick_get_capabilities.cpp osx_joystick.hpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(CXXM64FLAGS) $(ARCH64) $<
 
 osx_joystick_get_available.mexmaci: osx_joystick_get_available.o32 osx_joystick.o32 button.o32 axes.o32 pov.o32 dumpjoystick.o32
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LM32FLAGS) $(ARCH32)
