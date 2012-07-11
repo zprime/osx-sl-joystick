@@ -55,7 +55,8 @@ class POV
      *
      * \return Returns the current angle of the POV (hatswitch) in degrees (starting at 0 at
      *  LogicalMinimum and ending at 360*(length-1)/length at LogicalMaximum. When nothing is
-     *  pressed, -1 is returned, and when there is an error -5 is returned.
+     *  pressed, -1 is returned.
+     * \exception const char* exception thrown if the value cannot be read.
      */
     double ReadState( void );
     

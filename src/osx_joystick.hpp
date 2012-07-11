@@ -48,6 +48,9 @@ enum JoystickIOIndex {
   kJoystick_Outputs
 };
 
+/**
+ * \brief Class for joystick object descriptions. Contains public productKey and locationKey.
+ */
 class JoyDev
 {
   public:

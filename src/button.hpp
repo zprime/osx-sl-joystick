@@ -55,6 +55,7 @@ class Button
      * \brief Reads the state of the button element.
      *
      * \return Boolean button state.
+     * \exception const char* exception thrown if the value cannot be read.
      */
     bool ReadState( void );
   

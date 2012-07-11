@@ -57,6 +57,7 @@ Axes::~Axes(){}
  *
  * \return Normalised state of the axis. -1 corresponds to LogicalMinimum and +1
  *   corresponds to LogicalMaximum. Returns -5 if there is an error opening the value.
+ * \exception const char* exception thrown if the value cannot be read.
  */
 double Axes::ReadState( void )
 {
@@ -77,6 +78,5 @@ double Axes::ReadState( void )
     // Normalise and return the result
     return 2*value/(logmax-logmin) - 1;
   }
-  // Return -5 for a value opening error
-  return -5;
+  throw "Error reading axes";
 }

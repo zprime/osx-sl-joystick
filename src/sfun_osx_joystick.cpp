@@ -233,9 +233,9 @@ void mdlInitializeSizes_NULLJoy( SimStruct *S )
     ssSetInputPortDataType( S, 0, SS_DOUBLE );
   }
   else result = ssSetNumInputPorts( S, 0 );
-  if( result )
+  if( !result )
   {
-    ssSetErrorStatus( S, "sfun-osx-joystick::mdlInitializeSizes Failed to set the number of input ports.\n" );
+    ssSetErrorStatus( S, "sfun-osx-joystick::mdlInitializeSizes_NULLJoy Failed to set the number of input ports.\n" );
     return;
   }
   
@@ -246,7 +246,7 @@ void mdlInitializeSizes_NULLJoy( SimStruct *S )
   if( lP ) numOutputs++;
   
   result = ssSetNumOutputPorts( S, numOutputs );
-  if( result )
+  if( !result )
   {
     ssSetErrorStatus( S, "sfun-osx-joystick::mdlInitializeSizes Failed to set the number of output ports.\n");
     return;
@@ -300,10 +300,25 @@ static void mdlSetDefaultPortDimensionInfo( SimStruct *S )
 {
   // Get 'logical' values as to whether to enable inputs and outputs
   int output = 0;
-  if( mxGetScalar( ssGetSFcnParam( S, P_LA ) ) > 0 ) ssSetOutputPortWidth( S, output++, 1 );
-  if( mxGetScalar( ssGetSFcnParam( S, P_LB ) ) > 0 ) ssSetOutputPortWidth( S, output++, 1 );
-  if( mxGetScalar( ssGetSFcnParam( S, P_LP ) ) > 0 ) ssSetOutputPortWidth( S, output++, 1 );
-  if( mxGetScalar( ssGetSFcnParam( S, P_LO ) ) > 0 ) ssSetInputPortWidth( S, 0, 1 );
+  if( mxGetScalar( ssGetSFcnParam( S, P_LA ) ) > 0 )
+  {
+    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
+    output++;
+  }
+  if( mxGetScalar( ssGetSFcnParam( S, P_LB ) ) > 0 )
+  {
+    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
+    output++;
+  }
+  if( mxGetScalar( ssGetSFcnParam( S, P_LP ) ) > 0 )
+  {
+    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
+    output++;
+  }
+  if( mxGetScalar( ssGetSFcnParam( S, P_LO ) ) > 0 )
+  {
+    if( ssGetInputPortWidth( S, 0 ) == DYNAMICALLY_SIZED ) ssSetInputPortWidth( S, 0, 1 );
+  }
 }
 
 /**
@@ -458,64 +473,73 @@ void mdlOutputs_NULLJoy( SimStruct *S, int_T tid )
 void mdlOutputs_REALJoy( SimStruct *S, int_T tid )
 {
   UNUSED( tid );
-    Joystick *myJoy = (Joystick *) ssGetPWork(S)[0];
+  Joystick *myJoy = (Joystick *) ssGetPWork(S)[0];
   vector<int> *JoyIO = (vector<int> *) ssGetPWork(S)[1];
   
-  // Poll the Joystick axes
-  int jj = 0;
-  if( (*JoyIO)[ kJoystick_Axes ] > 0 )
+  // Exception could be thrown in the case of a read error.
+  try
   {
-    real_T *pr = ssGetOutputPortRealSignal( S, jj );
-    vector<double> axes = myJoy->PollAxes();
-    if( (int)axes.size() != ssGetOutputPortWidth( S, jj ) )
+    // Poll the Joystick axes
+    int jj = 0;
+    if( (*JoyIO)[ kJoystick_Axes ] > 0 )
     {
-      ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs Axes port width badness." );
-      return;
+      real_T *pr = ssGetOutputPortRealSignal( S, jj );
+      vector<double> axes = myJoy->PollAxes();
+      if( (int)axes.size() != ssGetOutputPortWidth( S, jj ) )
+      {
+        ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs Axes port width badness." );
+        return;
+      }
+      copy( axes.begin(), axes.end(), pr );
+      jj++;
     }
-    copy( axes.begin(), axes.end(), pr );
-    jj++;
-  }
   
-  // Poll the buttons
-  if( (*JoyIO)[ kJoystick_Buttons ] > 0 )
-  {
-    boolean_T *pb = (boolean_T *)ssGetOutputPortSignal( S, jj );
-    vector<bool> buttons = myJoy->PollButtons();
-    if( (int)buttons.size() != ssGetOutputPortWidth( S, jj ) )
+    // Poll the buttons
+    if( (*JoyIO)[ kJoystick_Buttons ] > 0 )
     {
-      ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs Button port width badness." );
-      return;
+      boolean_T *pb = (boolean_T *)ssGetOutputPortSignal( S, jj );
+      vector<bool> buttons = myJoy->PollButtons();
+      if( (int)buttons.size() != ssGetOutputPortWidth( S, jj ) )
+      {
+        ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs Button port width badness." );
+        return;
+      }
+      copy( buttons.begin(), buttons.end(), pb );
+      jj++;
     }
-    copy( buttons.begin(), buttons.end(), pb );
-    jj++;
-  }
   
-  // Poll the POVs
-  if( (*JoyIO)[ kJoystick_POVs ] > 0 )
-  {
-    real_T *pr = ssGetOutputPortRealSignal( S, jj );
-    vector<double> POVs = myJoy->PollPOV();
-    if( (int)POVs.size() != ssGetOutputPortWidth( S, jj ) )
+    // Poll the POVs
+    if( (*JoyIO)[ kJoystick_POVs ] > 0 )
     {
-      ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs POV port width badness.");
-      return;
+      real_T *pr = ssGetOutputPortRealSignal( S, jj );
+      vector<double> POVs = myJoy->PollPOV();
+      if( (int)POVs.size() != ssGetOutputPortWidth( S, jj ) )
+      {
+        ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs POV port width badness.");
+        return;
+      }
+      copy( POVs.begin(), POVs.end(), pr );
+      jj++;
     }
-    copy( POVs.begin(), POVs.end(), pr );
-    jj++;
-  }
   
-  // Push the input signals to the Joystick
-  if( (*JoyIO)[ kJoystick_Outputs ] > 0 )
-  {
-    const real_T *pr = ssGetInputPortRealSignal( S, 0 );
-    vector<double> outputs( (*JoyIO)[ kJoystick_Outputs ], 0 );
-    if( (int)outputs.size() != ssGetInputPortWidth( S, 0 ) )
+    // Push the input signals to the Joystick
+    if( (*JoyIO)[ kJoystick_Outputs ] > 0 )
     {
-      ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs Joystick Output (block input) port width badness." );
-      return;
+      const real_T *pr = ssGetInputPortRealSignal( S, 0 );
+      vector<double> outputs( (*JoyIO)[ kJoystick_Outputs ], 0 );
+      if( (int)outputs.size() != ssGetInputPortWidth( S, 0 ) )
+      {
+        ssSetErrorStatus( S, "osx-sl-joystick::mdlOutputs Joystick Output (block input) port width badness." );
+        return;
+      }
+      copy( pr, pr+outputs.size(), outputs.begin() );
     }
-    copy( pr, pr+outputs.size(), outputs.begin() );
   }
+  catch(const char *message)
+  {
+    ssSetErrorStatus( S, "Joystick read error. This is most likely due to a joystick being removed during simulation." );
+  }
+  return;
 }
 
 /**

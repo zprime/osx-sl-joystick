@@ -54,6 +54,7 @@ Button::~Button( void )
  * \brief Reads the state of the button element.
  *
  * \return Boolean button state.
+ * \exception const char* exception thrown if the value cannot be read.
  */
 bool Button::ReadState( void )
 {
@@ -65,6 +66,6 @@ bool Button::ReadState( void )
   {
     return (bool)IOHIDValueGetIntegerValue( myVal );
   }
-  // Otherwise, return false.
-  return false;
+  // Otherwise, throw an exception
+  throw "Error reading button";
 }
