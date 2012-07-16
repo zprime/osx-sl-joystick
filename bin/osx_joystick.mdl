@@ -14,9 +14,9 @@ Library {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "zebb"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Tue Jun 26 15:01:43 2012"
-  RTWModifiedTimeStamp	  0
-  ModelVersionFormat	  "1.%<AutoIncrement:3>"
+  LastModifiedDate	  "Mon Jul 16 15:02:59 2012"
+  RTWModifiedTimeStamp	  264351777
+  ModelVersionFormat	  "1.0"
   ConfigurationManager	  "None"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -421,7 +421,7 @@ Library {
 	      Version		      "1.6.0"
 	      Array {
 		Type			"Cell"
-		Dimension		16
+		Dimension		15
 		Cell			"IncludeMdlTerminateFcn"
 		Cell			"CombineOutputUpdateFcns"
 		Cell			"SuppressErrorStatus"
@@ -432,12 +432,11 @@ Library {
 		Cell			"CPPClassGenCompliant"
 		Cell			"MultiInstanceERTCode"
 		Cell			"PurelyIntegerCode"
-		Cell			"SupportNonFinite"
+		Cell			"PortableWordSizes"
 		Cell			"SupportComplex"
 		Cell			"SupportAbsoluteTime"
 		Cell			"SupportContinuousTime"
 		Cell			"SupportNonInlinedSFcns"
-		Cell			"PortableWordSizes"
 		PropName		"DisabledProps"
 	      }
 	      TargetFcnLib	      "ansi_tfl_table_tmw.mat"
@@ -533,50 +532,16 @@ Library {
   }
   BlockParameterDefaults {
     Block {
-      BlockType		      Outport
-      Port		      "1"
-      UseBusObject	      off
-      BusObject		      "BusObject"
-      BusOutputAsStruct	      off
-      PortDimensions	      "-1"
-      SampleTime	      "-1"
-      OutMin		      "[]"
-      OutMax		      "[]"
-      DataType		      "auto"
-      OutDataType	      "fixdt(1,16,0)"
-      OutScaling	      "[]"
-      OutDataTypeStr	      "Inherit: auto"
-      LockScale		      off
-      SignalType	      "auto"
-      SamplingMode	      "auto"
-      SourceOfInitialOutputValue "Dialog"
-      OutputWhenDisabled      "held"
-      InitialOutput	      "[]"
-      DimensionsMode	      "auto"
-    }
-    Block {
-      BlockType		      SubSystem
-      ShowPortLabels	      "FromPortIcon"
-      Permissions	      "ReadWrite"
-      PermitHierarchicalResolution "All"
-      TreatAsAtomicUnit	      off
-      CheckFcnCallInpInsideContextMsg off
-      SystemSampleTime	      "-1"
-      RTWFcnNameOpts	      "Auto"
-      RTWFileNameOpts	      "Auto"
-      RTWMemSecFuncInitTerm   "Inherit from model"
-      RTWMemSecFuncExecute    "Inherit from model"
-      RTWMemSecDataConstants  "Inherit from model"
-      RTWMemSecDataInternal   "Inherit from model"
-      RTWMemSecDataParameters "Inherit from model"
-      SimViewingDevice	      off
-      DataTypeOverride	      "UseLocalSettings"
-      MinMaxOverflowLogging   "UseLocalSettings"
+      BlockType		      "S-Function"
+      FunctionName	      "system"
+      SFunctionModules	      "''"
+      PortCounts	      "[]"
+      SFunctionDeploymentMode off
     }
   }
   System {
     Name		    "osx_joystick"
-    Location		    [74, 97, 654, 357]
+    Location		    [633, 418, 1213, 678]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -591,68 +556,68 @@ Library {
     ZoomFactor		    "100"
     ReportName		    "simulink-default.rpt"
     Block {
-      BlockType		      SubSystem
-      Name		      "Joystick"
-      Ports		      [0, 2]
-      Position		      [265, 99, 365, 141]
-      MinAlgLoopOccurrences   off
-      PropExecContextOutsideSubsystem off
-      RTWSystemCode	      "Auto"
-      FunctionWithSeparateData off
-      Opaque		      off
-      RequestExecContextInheritance off
-      MaskHideContents	      off
-      MaskPromptString	      "Device:|Automatic axes width|Axes width:|Automatic button width|Button width:"
-      MaskStyleString	      "popup(None|0: PLAYSTATION(R)3 Controller),checkbox,edit,checkbox,edit"
-      MaskTunableValueString  "off,on,on,on,on"
-      MaskCallbackString      "str = get_param(gcb,'MaskStyleString');\nlist = JoystickGetAvailable;\nlist = regexprep"
-      "( list, ['\\',char(124)], '-' );\nstrnew = regexprep(str,'popup\\(.*?\\),',['popup(None', sprintf([char(124),'%s"
-      "'],list{:}), '),' ], 'once' );\nset_param(gcb,'MaskStyleString',strnew);|val = get_param(gcb,'MaskValues');\nvis"
-      " = get_param(gcb,'MaskVisibilities');\nif strcmpi(val{2},'on')\n  vis{3} = 'off';\nelse\n  vis{3} = 'on';\nend\n"
-      "set_param(gcb,'MaskVisibilities',vis);||val = get_param(gcb,'MaskValues');\nvis = get_param(gcb,'MaskVisibilitie"
-      "s');\nif strcmpi(val{4},'on')\n  vis{5} = 'off';\nelse\n  vis{5} = 'on';\nend\nset_param(gcb,'MaskVisibilities',"
-      "vis);|"
-      MaskEnableString	      "on,on,on,on,on"
-      MaskVisibilityString    "on,on,off,on,off"
-      MaskToolTipString	      "on,on,on,on,on"
-      MaskVarAliasString      ",,,,"
-      MaskVariables	      "dev=@1;aaxw=@2;axw=@3;aabw=@4;abw=@5;"
+      BlockType		      "S-Function"
+      Name		      "OSX Joystick"
+      Ports		      [0, 3]
+      Position		      [175, 89, 295, 151]
+      FunctionName	      "sfun_osx_joystick"
+      Parameters	      "JoyLocKey,Ts,lA,lB,lP,lO"
+      EnableBusSupport	      off
+      MaskType		      "OSX Joystick"
+      MaskDescription	      "Axes are doubles in [-1,1], Buttons are booleans, POVs (or hatswitch) are double in [0,36"
+      "0) when pressed, and -1 otherwise, and 'Outputs' are doubles should be in [0,1].\n\nIf the 'None' device is sele"
+      "cted, dynamically sized inputs/outputs can be enabled."
+      MaskHelp		      "Joystick interface for Simulink on OS X.\n\nThis block uses the IO HID interface in OS X, and h"
+      "ence can work with all joysticks that use the HID specifications.  All inputs/outputs are in the order which the"
+      " joystick specified them (not according to their usage).\n\nAxes are doubles in [-1,1].\n\nButtons are booleans."
+      "\n\nPOVs are doubles in [0,360), representing a view angle, when pressed, and -1 otherwise. POV stands for point"
+      " of view, and are usually hatswitches or a D-pads.\n\nJoystick outputs (i.e. to the joystick, such as force feed"
+      "back) should be doubles in [0,1].\n\nIf the 'None' device is selected, checkboxes of desired inputs/outputs are "
+      "shown, and the inputs/outputs become dynamically sized.\n\nNOTE: Although implemented, the Joystick Outputs (i.e"
+      ". to the joystick) don't appear to do much with the devices I have to test them out. Suggestions for improvement"
+      " with the 'outputs' are welcome.\n\nNOTE: This block does not produce deployable code."
+      MaskPromptString	      "Joystick|Enable Axes|Enable Buttons|Enable POVs|Enable Outputs|Sample Time"
+      MaskStyleString	      "popup(None),checkbox,checkbox,checkbox,checkbox,edit"
+      MaskTunableValueString  "off,off,off,off,off,off"
+      MaskCallbackString      "% Get the list, and save it\nlist = osx_joystick_get_available();\nstr = 'popup(None),c"
+      "heckbox,checkbox,checkbox,checkbox,edit';\nif ~isempty( list )\n  for ii=1:size(list,1)\n    list{ii,1} = regexp"
+      "rep( list{ii,1}, ['\\',char(124)], '-' );\n  end\n  set_param(gcb,'UserData',list);\n\n  % Modify the dialogue s"
+      "tring\n  str = regexprep( str, 'popup\\(.*\\),checkbox,checkbox,checkbox,checkbox,edit', ['popup(None', sprintf("
+      "[char(124),'%s'],list{:,1}),'),checkbox,checkbox,checkbox,checkbox,edit'], 'once' );\nelse\n  set_param(gcb,'Use"
+      "rData',[]);\nend\nset_param(gcb,'MaskStyleString',str);\n\n% Make sure the currently selected Joystick exists, i"
+      "f not, revert to None\nvals = get_param(gcb,'MaskValues');\nfound = 0;\nfor ii=1:size(list,1)\n  if strcmpi( val"
+      "s{1}, list{ii,1} )\n    found=1;\n    break;\n  end;\nend\nif ~found\n  vals{1} = 'None';\n  set_param(gcb,'Mask"
+      "Values',vals);\nend\n\n% If JoyID != 1, then hide the checkboxes\nif strcmpi(vals{1},'None')\n    set_param(gcb,"
+      "'MaskVisibilities',{'on','on','on','on','on','on'});\nelse\n    set_param(gcb,'MaskVisibilities',{'on','off','of"
+      "f','off','on','on'});\nend|||||"
+      MaskEnableString	      "on,on,on,on,on,on"
+      MaskVisibilityString    "on,on,on,on,on,on"
+      MaskToolTipString	      "on,on,on,on,on,on"
+      MaskVarAliasString      ",,,,,"
+      MaskVariables	      "JoyID=@1;lA=@2;lB=@3;lP=@4;lO=@5;Ts=@6;"
+      MaskInitialization      "% If we have selected the empty (NULL) joystick\nif JoyID == 1\n  JoyLocKey = int32( 0 "
+      ");\nelse\n  list = get_param(gcb,'UserData');\n  if isempty(list) || JoyID > size(list,1)+1\n    JoyLocKey = int"
+      "32( 0 );\n  else\n    JoyLocKey = list{ JoyID-1, 2 };\n    [nA,nB,nP,nO] = osx_joystick_get_capabilities( JoyLoc"
+      "Key );\n    if nA; lA=1; else; lA=0; end;\n    if nB; lB=1; else; lB=0; end;\n    if nP; lP=1; else; lP=0; end;\n"
+      "  end\nend\n\n\n% Update the port labels\nlabel = sprintf('image( imread( ''osx-sl-joystick.png'') );\\n');\npor"
+      "tnum = 1;\nif lA\n  if exist('nA','var'); dims=sprintf(' [%i]',nA); else; dims=''; end;\n  label = [label, sprin"
+      "tf('port_label(''output'',%i,''Axes%s'');\\n',portnum,dims)];\n  portnum = portnum+1;\nend\nif lB\n  if exist('n"
+      "B','var'); dims=sprintf(' [%i]',nB); else; dims=''; end;\n  label = [label, sprintf('port_label(''output'',%i,''"
+      "Buttons%s'');\\n',portnum,dims)];\n  portnum = portnum+1;\nend\nif lP\n  if exist('nP','var'); dims=sprintf(' [%"
+      "i]',nP); else; dims=''; end;\n  label = [label, sprintf('port_label(''output'',%i,''POVs%s'');\\n',portnum,dims)"
+      "];\n  portnum = portnum+1;\nend\nif lO\n  if exist('nO','var'); dims=sprintf(' [%i]',nO); else; dims=''; end;\n "
+      " label = [label, sprintf('port_label(''input'',1,''Outputs%s'');\\n',dims)];\nend\n\nset_param( gcb, 'MaskDispla"
+      "y', label );"
+      MaskDisplay	      "image( imread( 'osx-sl-joystick.png') );\nport_label('output',1,'Axes');\nport_label('output'"
+      ",2,'Buttons');\nport_label('output',3,'POVs');\n"
+      MaskSelfModifiable      on
       MaskIconFrame	      on
       MaskIconOpaque	      on
       MaskIconRotate	      "none"
       MaskPortRotate	      "default"
       MaskIconUnits	      "autoscale"
-      MaskValueString	      "None|on|0|on|0"
-      MaskTabNameString	      ",,,,"
-      System {
-	Name			"Joystick"
-	Location		[636, 443, 1134, 743]
-	Open			off
-	ModelBrowserVisibility	off
-	ModelBrowserWidth	200
-	ScreenColor		"white"
-	PaperOrientation	"landscape"
-	PaperPositionMode	"auto"
-	PaperType		"A4"
-	PaperUnits		"centimeters"
-	TiledPaperMargins	[1.270000, 1.270000, 1.270000, 1.270000]
-	TiledPageScale		1
-	ShowPageBoundaries	off
-	ZoomFactor		"100"
-	Block {
-	  BlockType		  Outport
-	  Name			  "Axes"
-	  Position		  [360, 103, 390, 117]
-	  IconDisplay		  "Port number"
-	}
-	Block {
-	  BlockType		  Outport
-	  Name			  "Buttons"
-	  Position		  [360, 143, 390, 157]
-	  Port			  "2"
-	  IconDisplay		  "Port number"
-	}
-      }
+      MaskValueString	      "None|on|on|on|off|1/30"
+      MaskTabNameString	      ",,,,,"
     }
   }
 }
