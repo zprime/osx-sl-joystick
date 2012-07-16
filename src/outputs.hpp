@@ -25,39 +25,38 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __AXES_H__
-#define __AXES_H__
+#ifndef __OUTPUTS_H__
+#define __OUTPUTS_H__
 
 #include <IOKit/hid/IOHIDDevice.h>
 #include <IOKit/hid/IOHIDElement.h>
 #include <IOKit/hid/IOHIDValue.h>
+#include <mach/mach_time.h>
 
-class Axes
+class Outputs
 {
   public:
     /**
-     * \brief Initialise the Axes object.
+     * \brief Initialise the Output object.
      *
      * \param[in] device Device reference.
      * \param[in] element Element reference. The element must be of type
-     *  kIOHIDElementTypeInput_Axis or kIOHIDElementTypeInput_Misc otherwise the behaviour
-     *  is undefined.
+     *  kIOHIDElementTypeOutput otherwise the behaviour is undefined.
      */
-    Axes( IOHIDDeviceRef device, IOHIDElementRef element );
+    Outputs( IOHIDDeviceRef device, IOHIDElementRef element );
     
     /**
-     * \brief Axes destructor.
+     * \brief Outputs destructor.
      */
-    ~Axes();
+    ~Outputs();
     
     /**
-     * \brief Read the state of the axes as a normalised double.
+     * \brief Set the value of the output.
      *
-     * \return Normalised state of the axis. -1 corresponds to LogicalMinimum and +1
-     *   corresponds to LogicalMaximum.
+     * \param[in] val Normalised value to send to the device.
      * \exception const char* exception thrown if the value cannot be read.
      */
-    double ReadState( void );
+    void SetValue( double val );
     
   private:
     IOHIDElementRef myElement;

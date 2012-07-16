@@ -56,7 +56,7 @@ Axes::~Axes(){}
  * \brief Read the state of the axes as a normalised double.
  *
  * \return Normalised state of the axis. -1 corresponds to LogicalMinimum and +1
- *   corresponds to LogicalMaximum. Returns -5 if there is an error opening the value.
+ *   corresponds to LogicalMaximum.
  * \exception const char* exception thrown if the value cannot be read.
  */
 double Axes::ReadState( void )

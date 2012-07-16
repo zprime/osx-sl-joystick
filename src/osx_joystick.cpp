@@ -109,6 +109,7 @@ bool Joystick::Initialise( int32_t joyLocation )
   if( !myButtons.empty() ) myButtons.erase( myButtons.begin(), myButtons.end() );
   if( !myAxes.empty() ) myAxes.erase( myAxes.begin(), myAxes.end() );
   if( !myPOV.empty() ) myPOV.erase( myPOV.begin(), myPOV.end() );
+  if( !myOutputs.empty() ) myOutputs.erase( myOutputs.begin(), myOutputs.end() );
   
   // Open the device references
   CFSetRef deviceRefs = IOHIDManagerCopyDevices(myManager);
@@ -212,6 +213,8 @@ bool Joystick::Initialise( int32_t joyLocation )
         break;
         
       case kIOHIDElementTypeOutput:
+        DBG_PRINTF("Output at %i\n", (int)ii );
+        myOutputs.push_back( Outputs( myDevice, element ) );
         break;
       default: break;
     }
@@ -238,7 +241,7 @@ vector<int> Joystick::QueryIO( void )
     result[ kJoystick_Axes ] = myAxes.size();
     result[ kJoystick_Buttons ] = myButtons.size();
     result[ kJoystick_POVs ] = myPOV.size();
-    result[ kJoystick_Outputs ] = 0;
+    result[ kJoystick_Outputs ] = myOutputs.size();
   }
   return result;
 }
@@ -281,7 +284,7 @@ vector<bool> Joystick::PollButtons( void )
  */
 vector<double> Joystick::PollPOV( void )
 {
-  vector<double> POVs( myPOV.size(), 65536.0 );
+  vector<double> POVs( myPOV.size(), -1.0 );
   for( size_t ii=0; ii<myPOV.size(); ii++ )
   {
     POVs[ ii ] = myPOV[ ii ].ReadState();
@@ -294,15 +297,19 @@ vector<double> Joystick::PollPOV( void )
  */
 void Joystick::PushInputs( vector<double> normInputs )
 {
-  UNUSED( normInputs );
-#ifdef ERROR_OUT
-  static bool onceOff = true;
-  if( onceOff )
+  for( size_t ii=0; ii<myOutputs.size(); ii++ )
   {
-    onceOff = false;
-    ERR_PRINTF("Joystick::PushInputs has not been implemented.");
+    myOutputs[ ii ].SetValue( normInputs[ ii ] );
   }
-#endif
+//  UNUSED( normInputs );
+//#ifdef ERROR_OUT
+//  static bool onceOff = true;
+//  if( onceOff )
+//  {
+//    onceOff = false;
+//    ERR_PRINTF("Joystick::PushInputs has not been implemented.");
+//  }
+//#endif
 }
 
 /**

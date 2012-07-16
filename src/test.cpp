@@ -56,7 +56,7 @@ int main( void )
       vector<double> axes;
       for( size_t ii=0; ii<100; ii++ )
       {
-        usleep( 100000 );
+        usleep( 10000 );
         axes = myJoy.PollAxes();
         fprintf(stdout,"\r");
         for( size_t jj=0; jj<axes.size(); jj++ )
@@ -66,6 +66,21 @@ int main( void )
         fflush( stdout );
       }
       fprintf(stdout,"\n");
+      if( capabilities[ kJoystick_Outputs ] > 0 )
+      {
+        vector<double> output( capabilities[ kJoystick_Outputs ], 0.0 );
+        for( size_t ii=0; ii<(size_t)capabilities[ kJoystick_Outputs ]; ii++ )
+        {
+          for( size_t jj=0; jj<256; jj++ )
+          {
+            output[ ii ] = ((double)jj)/255.0;
+            fprintf(stdout, "\rTesting output %i: Outputting value %.3f", (int)ii, output[ ii ]);
+            fflush( stdout );
+            myJoy.PushInputs( output );
+          }
+        }
+        fprintf(stdout,"\n");
+      }
     }
     else
     {

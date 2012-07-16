@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "button.hpp"
 #include "axes.hpp"
 #include "pov.hpp"
+#include "outputs.hpp"
 
 using namespace std;
 
@@ -137,6 +138,7 @@ private:
   vector<Button> myButtons;
   vector<Axes> myAxes;
   vector<POV> myPOV;
+  vector<Outputs> myOutputs;
   
   /**
    * \brief Initialise the IOHID manager

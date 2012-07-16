@@ -25,45 +25,58 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __AXES_H__
-#define __AXES_H__
+#include "outputs.hpp"
 
-#include <IOKit/hid/IOHIDDevice.h>
-#include <IOKit/hid/IOHIDElement.h>
-#include <IOKit/hid/IOHIDValue.h>
-
-class Axes
+/**
+ * \brief Initialise the Output object.
+ *
+ * \param[in] device Device reference.
+ * \param[in] element Element reference. The element must be of type
+ *  kIOHIDElementTypeOutput otherwise the behaviour is undefined.
+ */
+Outputs::Outputs( IOHIDDeviceRef device, IOHIDElementRef element )
 {
-  public:
-    /**
-     * \brief Initialise the Axes object.
-     *
-     * \param[in] device Device reference.
-     * \param[in] element Element reference. The element must be of type
-     *  kIOHIDElementTypeInput_Axis or kIOHIDElementTypeInput_Misc otherwise the behaviour
-     *  is undefined.
-     */
-    Axes( IOHIDDeviceRef device, IOHIDElementRef element );
+  // Copy the device and element to local (object) storage
+  myDevice = device;
+  myElement = element;
+  // Get the (logical) max and min of the element
+  logmax = IOHIDElementGetLogicalMax( myElement );
+  logmin = IOHIDElementGetLogicalMin( myElement );
+  // Is it relative?
+  isRelative = IOHIDElementIsRelative( myElement );
+}
     
-    /**
-     * \brief Axes destructor.
-     */
-    ~Axes();
+/**
+ * \brief Outputs destructor.
+ */
+Outputs::~Outputs()
+{
+}
     
-    /**
-     * \brief Read the state of the axes as a normalised double.
-     *
-     * \return Normalised state of the axis. -1 corresponds to LogicalMinimum and +1
-     *   corresponds to LogicalMaximum.
-     * \exception const char* exception thrown if the value cannot be read.
-     */
-    double ReadState( void );
-    
-  private:
-    IOHIDElementRef myElement;
-    IOHIDDeviceRef myDevice;
-    double logmax, logmin, lastVal;
-    bool isRelative;
-};
-
-#endif
+/**
+ * \brief Set the value of the output.
+ *
+ * \param[in] val Normalised value to send to the device.
+ * \exception const char* exception thrown if the value cannot be read.
+ */
+void Outputs::SetValue( double val )
+{
+  if( val > 1.0 ) val = 1.0;
+  if( val < 0.0 ) val = 0.0;
+  if( isRelative )
+  {
+    double temp = val;
+    val = (val-lastVal);
+    lastVal = temp;
+    if( val > 1.0 ) val = 1.0;
+    if( val < 0.0 ) val = 0.0;
+  }
+  int intVal = int( (logmax-logmin)*val + logmin );
+  IOHIDValueRef hidVal = IOHIDValueCreateWithIntegerValue( kCFAllocatorDefault, myElement, 
+                                                  mach_absolute_time(), intVal );
+  IOReturn mySuccess = IOHIDDeviceSetValue( myDevice, myElement, hidVal );
+  if( mySuccess != kIOReturnSuccess )
+  {
+    throw "Unable to set output value.";
+  }
+}

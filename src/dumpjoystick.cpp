@@ -87,7 +87,7 @@ DumpJoystick::DumpJoystick( const char * filename, IOHIDDeviceRef device )
       }
     }
   
-    fprintf(fh, "  ID           TYPE        USAGE    UID LMAX LMIN LEN IV HN HP IA  U UE NL IR IW RID RC RS\n");
+    fprintf(fh, "  ID           TYPE        USAGE    UID    UP LMAX LMIN LEN IV HN HP IA  U UE NL IR IW RID RC RS\n");
   }
 }
 
@@ -123,6 +123,7 @@ void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, 
   // Get the characteristics to dump
   IOHIDElementType type = IOHIDElementGetType( element );
   uint32_t usage = IOHIDElementGetUsage( element );
+  uint32_t up = IOHIDElementGetUsagePage( element );
   const char *typeStr = ElemTypeStr( type );
   const char *usageStr = ElemUsageStr( usage );
   int logmax = IOHIDElementGetLogicalMax( element );
@@ -158,7 +159,7 @@ void DumpJoystick::DumpElement( IOHIDDeviceRef device, IOHIDElementRef element, 
   else
   {
     // Then dump all of the characteristics.
-    fprintf( fh, "%4i %14s %12s (0x%02x) %4i %4i %3i %2i %2i %2i %2i %2i %2i %2i %2i %2i %3i %2i %2i\n", (int)id, typeStr, usageStr, usage, logmax, logmin, len, iv, hn, hp, ia, eu, ue, nl, ir, iw, rid, rc, rs );
+    fprintf( fh, "%4i %14s %12s (0x%02x) %5i %4i %4i %3i %2i %2i %2i %2i %2i %2i %2i %2i %2i %3i %2i %2i\n", (int)id, typeStr, usageStr, usage, up, logmax, logmin, len, iv, hn, hp, ia, eu, ue, nl, ir, iw, rid, rc, rs );
   }
 }
 

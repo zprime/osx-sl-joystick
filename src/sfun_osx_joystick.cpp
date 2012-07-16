@@ -91,11 +91,6 @@ void mdlCheckParameters_NULLJoy( SimStruct *S )
     ssSetErrorStatus( S, "sfun_osx_joystick::mdlCheckParameters lP (any POVs?) must be a scalar double.");
     return;
   }
-  if( !IS_PARAM_DOUBLE( ssGetSFcnParam( S, P_LO ) ) )
-  {
-    ssSetErrorStatus( S, "sfun_osx_joystick::mdlCheckParameters lO (any outputs?) must be a scalar double.");
-    return;
-  }
 }
 
 /**
@@ -139,6 +134,12 @@ static void mdlCheckParameters( SimStruct *S )
     ssSetErrorStatus( S, "sfun-osx-joystick::mdlCheckParameters Sample time must be positive, or -1 for inherited." );
     return;
   }
+  // Check the enable Outputs parameter
+  if( !IS_PARAM_DOUBLE( ssGetSFcnParam( S, P_LO ) ) )
+  {
+    ssSetErrorStatus( S, "sfun_osx_joystick::mdlCheckParameters lO (any outputs?) must be a scalar double.");
+    return;
+  }
 }
 #endif
 
@@ -163,9 +164,15 @@ void mdlInitializeSizes_REALJoy( SimStruct *S )
   bool result;
   if( JoyIO[ kJoystick_Outputs ] > 0 )
   {
-    result = ssSetNumInputPorts( S, 1 );
-    ssSetInputPortWidth( S, 0, JoyIO[ kJoystick_Outputs ] );
-    ssSetInputPortDataType( S, 0, SS_DOUBLE );
+    int lO = int( mxGetScalar( ssGetSFcnParam( S, P_LO ) ) );
+    if( lO )
+    {
+      result = ssSetNumInputPorts( S, 1 );
+      ssSetInputPortWidth( S, 0, JoyIO[ kJoystick_Outputs ] );
+      ssSetInputPortDataType( S, 0, SS_DOUBLE );
+      ssSetInputPortDirectFeedThrough( S, 0, 1 );
+    }
+    else result = ssSetNumInputPorts( S, 0 );
   }
   else result = ssSetNumInputPorts( S, 0 );
   if( !result )
@@ -405,29 +412,49 @@ void mdlStart_REALJoy( SimStruct *S )
     delete myJoy;
     return;
   }
-  static vector<int> JoyIO = myJoy->QueryIO();
+  vector<int> *JoyIO = new vector<int>( myJoy->QueryIO() );
+//  static vector<int> JoyIO = myJoy->QueryIO();
   // Double check that the device hasn't changed between the call to mdlInitializeSizes
   // and mdlStart
   bool error = false;
-  if( JoyIO[ kJoystick_Outputs ] > 0 )
+  if( (*JoyIO)[ kJoystick_Outputs ] > 0 )
   {
-    if( ssGetNumInputPorts(S) != 1 ) error = true;
-    if( ssGetInputPortWidth( S, 0 ) != JoyIO[ kJoystick_Outputs ] ) error = true;
+    int lO = int( mxGetScalar( ssGetSFcnParam( S, P_LO ) ) );
+    if( lO )
+    {
+      if( ssGetNumInputPorts(S) != 1 )
+      {
+        ssSetErrorStatus( S, "sfun-osx-joystick::mdlStart Input number of ports size error." );
+        delete myJoy;
+        delete JoyIO;
+        return;
+      }
+      if( ssGetInputPortWidth( S, 0 ) != (*JoyIO)[ kJoystick_Outputs ] )
+      {
+        static char msg[256];
+        sprintf(msg,"sfun-osx-joystick::mdlStart Input port width error. Port is set to %i, but joystick has %i.", ssGetInputPortWidth( S, 0 ), (*JoyIO)[ kJoystick_Outputs] );
+        ssSetErrorStatus( S, msg );
+        delete myJoy;
+        delete JoyIO;
+        return;
+      }
+    }
+    else (*JoyIO)[ kJoystick_Outputs ] = 0;
   }
   int jj=0;
-  if( JoyIO[ kJoystick_Axes ] > 0 )
+  if( (*JoyIO)[ kJoystick_Axes ] > 0 )
   {
-    if( ssGetOutputPortWidth( S, jj ) != JoyIO[ kJoystick_Axes ] ) error = true;
+    if( ssGetOutputPortWidth( S, jj ) != (*JoyIO)[ kJoystick_Axes ] ) error = true;
     jj++;
   }
-  if( JoyIO[ kJoystick_Buttons ] > 0 )
+  if( (*JoyIO)[ kJoystick_Buttons ] > 0 )
   {
-    if( ssGetOutputPortWidth( S, jj ) != JoyIO[ kJoystick_Buttons ] ) error = true;
+    if( ssGetOutputPortWidth( S, jj ) != (*JoyIO)[ kJoystick_Buttons ] ) error = true;
     jj++;
   }
-  if( JoyIO[ kJoystick_POVs ] > 0 )
+  if( (*JoyIO)[ kJoystick_POVs ] > 0 )
   {
-    if( ssGetOutputPortWidth( S, jj ) != JoyIO[ kJoystick_POVs ] ) error = true;
+    if( ssGetOutputPortWidth( S, jj ) != (*JoyIO)[ kJoystick_POVs ] ) error = true;
     jj++;
   }
   if( jj != ssGetNumOutputPorts(S) ) error = true;
@@ -436,12 +463,13 @@ void mdlStart_REALJoy( SimStruct *S )
   {
     ssSetErrorStatus( S, "sfun-osx-joystick::mdlStart Number of block input outputs or port widths has changed between mdlInitializeSizes and mdlStart." );
     delete myJoy;
+    delete JoyIO;
     return;
   }
   
   // Store Joystick object and the joystick IO capabilities
   ssGetPWork(S)[0] = (void *) myJoy;
-  ssGetPWork(S)[1] = (vector<int> *) &JoyIO;
+  ssGetPWork(S)[1] = (vector<int> *) JoyIO;
 }
 
 #define MDL_START
@@ -533,6 +561,7 @@ void mdlOutputs_REALJoy( SimStruct *S, int_T tid )
         return;
       }
       copy( pr, pr+outputs.size(), outputs.begin() );
+      myJoy->PushInputs( outputs );
     }
   }
   catch(const char *message)
@@ -562,9 +591,23 @@ static void mdlTerminate(SimStruct *S)
   int JoyLocKey = mxGetScalar( ssGetSFcnParam( S, P_JOYID ) );
   if( JoyLocKey != 0 )
   {
-    // Retrieve and delete the Joystick object.
+    // Retrieve the Joystick object.
     Joystick *myJoy =  (Joystick *) ssGetPWork(S)[0];
+    vector<int> *JoyIO = (vector<int> *) ssGetPWork(S)[1];
+    // If there are some Joystick outputs, set them to 0.
+    if( (*JoyIO)[ kJoystick_Outputs ] > 0 )
+    {
+      vector<double> outputs( (*JoyIO)[ kJoystick_Outputs ], 0 );
+      try
+      {
+        myJoy->PushInputs( outputs );
+      }
+      catch(const char* message)
+      {
+      }
+    }
     delete myJoy;
+    delete JoyIO;
   }
 }
 
