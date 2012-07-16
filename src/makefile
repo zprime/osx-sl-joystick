@@ -97,3 +97,4 @@ clean:
 
 cleanest: clean
 	rm -f test *.mexmaci64 *.mexmaci
+	rm -f ../bin/*.mexmaci64 ../bin/*.mexmaci

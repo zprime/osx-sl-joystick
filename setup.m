@@ -1,13 +1,81 @@
-function setup()
+%SETUP Sets up osx-sl-joystick for use in Simulink
+% setup( DESTDIR )
+%
+% This function compiles (if necessary) the binaries and adds files to the
+% MATLAB path.
+%
+% Input:
+%  DESTDIR - Optional.  If specified, the files are installed to the
+%    specified directory.
+%
+% Example:
+%  setup( '~/MATLAB/Library/osx-sl-joystick' );
+%
+% Note that if these files need to be compiled, you will need a gcc
+% compiler installed (such as via XCode).  Note that for recent versions,
+% you may need to apply <a href="http://www.mathworks.com/support/solutions/en/data/1-FR6LXJ/">this patch</a>.
+function setup( destdir )
 
-mexnames = {'JoystickGetAvailable'};
-
-for ii=1:length(mexnames)
-  if ~exist( [mexnames{ii},'.',mexext()], 'file' )
-    mex('-v','LDFLAGS=\$LDFLAGS -framework IOKit -framework CoreFoundation',...
-      [mexnames{ii},'.cpp'],'osx_joystick.cpp');
+% Sanity check the input
+if nargin > 1
+  error('setup:tooManyParams','setup.m accepts a maximum of one parameter (destination directory).');
+end
+if nargin == 1
+  if ~isa( destdir, 'char' )
+    error('setup:DestMustBeString','Destination directory must be specified as a string.');
   end
 end
+
+% List of mex functions that need to be compiled
+mexnames = {'osx_joystick_get_available','osx_joystick_get_capabilities','sfun_osx_joystick'};
+% Other files that need to be linked to the mex files
+libnames = {'osx_joystick.cpp','axes.cpp','button.cpp','pov.cpp','outputs.cpp'};
+
+% Loop through and compile the files if needed. Then copy them to the
+% ../bin/ directory if needed.
+here = pwd;
+cd src
+try
+  for ii=1:length(mexnames)
+    if ~exist( [mexnames{ii},'.',mexext()], 'file' )
+      mex('-v','LDFLAGS=\$LDFLAGS -framework IOKit -framework CoreFoundation',...
+        [mexnames{ii},'.cpp'],libnames{:});
+      copyfile( [mexnames{ii},'.',mexext()], '../bin/', 'f' );
+    elseif ~exist( ['../bin/',mexnames{ii},'.',mexext()], 'file' )
+      copyfile( [mexnames{ii},'.',mexext()], '../bin/', 'f' );
+    end
+  end
+  cd(here);
+catch err
+  cd(here);
+  rethrow(err);
+end
+
+% If a destination directory was specified, make and copy the files to it.
+if nargin == 1
+  [s,m,mid] = mkdir( destdir );
+  if ~s
+    error(mid,'Error making destination directory:\n%s',m);
+  end
+  [s,m,mid] = copyfile( 'bin/*', destdir, 'f' );
+  if ~s
+    error(mid,'Error copying files to destination directory:\n%s',m);
+  end
+else
+  destdir = [pwd(),'/bin'];
+end
+ 
+% Now add the directory to the path
+addpath( destdir, '-end' );
+
+% Done!
+fprintf( 1, ['OS X Simulink Joystick has now been successfully installed to:\n',...
+    '%s\nYou may need to restart the Simulink Library Browser.\n',...
+    'The block should appear in the library as ''OS X Joystick''.\n',...
+    'To uninstall, remove the destination from the path and delete the directory:\n',...
+    '  >> rmpath %s\n',...
+    '  >> rmdir %s s\n'],...
+    destdir, destdir, destdir );
 
 % Copyright (c) 2012, Zebb Prime and The University of Adelaide
 % All rights reserved.
