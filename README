@@ -1,5 +1,10 @@
-This project contains a series of functions to access joysticks in OSX for Simulink and
-Matlab.
+This project contains a series of functions to access joysticks in OSX for
+Simulink and Matlab.
+
+To start, simply download the project and run setup.m in Matlab. A
+compatible compiler may be necessary unless you download this project from
+the Mathworks FileExchange (in which case binaries should already be
+packaged with the project).
 
 Copyright (c) 2012 Zebb Prime and The University of Adelaide.
 Code covered by the BSD license.
