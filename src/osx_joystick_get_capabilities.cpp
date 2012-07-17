@@ -30,7 +30,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
       "Exactly 4 outputs required.\n");
   
   // Initialise the joystick
-  int32_T JoyLoc = mxGetScalar( prhs[0] );
+  int32_T JoyLoc = int32_T(mxGetScalar( prhs[0] ));
   Joystick myJoy;
   if( !myJoy.Initialise( JoyLoc ) ) mexErrMsgIdAndTxt(
       "osx_joystick_get_capabilities:JoystickNotFound",

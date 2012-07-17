@@ -4,7 +4,8 @@
 function package()
 
 here = pwd();
-files = {'src/*.cpp','src/*.hpp','src/*.mexmaci','src/*.mexmaci64','bin/*','README','LICENSE.txt','setup.m'};
+files = {'src/*.cpp','src/*.hpp','bin/*','README','LICENSE.txt','setup.m'};
+binaries = {'src/*.mexmaci','src/*.mexmaci64'};
 
 try
   cd src;
@@ -14,7 +15,7 @@ try
     error('package:CleaningError','Error cleaning up:\n%s\n',result);
   end
   % build binaries
-  [status,result] = system('make all');
+  [status,result] = system('make mode=release all');
   if status
     error('package:BuildError','Error compiling the files:\n%s\n',result);
   end
@@ -25,6 +26,12 @@ try
     delete osx-sl-joystick.zip;
   end
   zip('osx-sl-joystick',files);
+  
+  % Check to see if an archive already exists, if so, delete it
+  if exist('osx-sl-joystick-with-binaries.zip','file')
+    delete osx-sl-joystick-with-binaries.zip;
+  end
+  zip('osx-sl-joystick-with-binaries',[files,binaries]);
 catch err
   cd(here);
   rethrow(err);

@@ -2,8 +2,9 @@
 % setup( DESTDIR )
 %
 % This function compiles (if necessary) the binaries and adds files to the
-% MATLAB path. If you downloaded this from the Mathworks FileExchange, it
-% should already have precompiled binaries.
+% MATLAB path. The Mathworks FileExchange no longer allows the distribution
+% of binaries, so you will have to compile this project yourself. Help can
+% be found on the GitHub development site <a href="https://github.com/zprime/osx-sl/joystick/wiki">wiki</a>.
 %
 % Input:
 %  DESTDIR - Optional.  If specified, the files are installed to the
@@ -12,11 +13,12 @@
 % Example:
 %  setup( '~/Documents/MATLAB/Library/osx-sl-joystick' );
 %
-% Note that if these files need to be compiled, you will need a c++
-% compiler installed (such as via XCode).  Note that for recent versions,
-% you may need to apply <a href="http://www.mathworks.com/support/solutions/en/data/1-FR6LXJ/">this patch</a>.
+% Note that if the files require XCode to be installed. For recent versions
+% of Matlab, you may need to apply <a
+% href="http://www.mathworks.com/support/solutions/en/data/1-FR6LXJ/">this patch</a> to enable the XCode g++
+% compiler work with mex.
 %
-% Please post bug reports on the <a href="https://github.com/zprime/osx-sl-joystick/issues">GitHub</a> project page.
+% Please post bug reports on the <a href="https://github.com/zprime/osx-sl-joystick/issues">GitHub issues</a> project page.
 function setup( destdir )
 
 % Sanity check the input

@@ -402,7 +402,7 @@ void mdlStart_REALJoy( SimStruct *S )
   // Create a new Joystick object, and get the pointer to it.
   Joystick *myJoy = new Joystick;
   // Get the device ID and open it.
-  int devId = mxGetScalar( ssGetSFcnParam( S, P_JOYID ) );
+  int devId = int(mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ));
   if( !myJoy->Initialise( devId ) )
   {
     if( devId > 65535 ) devId = -1;
@@ -480,7 +480,7 @@ void mdlStart_REALJoy( SimStruct *S )
  */
 static void mdlStart( SimStruct *S )
 {
-  int devId = mxGetScalar( ssGetSFcnParam( S, P_JOYID ) );
+  int devId = int(mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ));
   if( devId==0 ) mdlStart_NULLJoy( S );
   else mdlStart_REALJoy( S );
 }
@@ -576,7 +576,7 @@ void mdlOutputs_REALJoy( SimStruct *S, int_T tid )
  */
 static void mdlOutputs(SimStruct *S, int_T tid)
 {
-  int JoyLocKey = mxGetScalar( ssGetSFcnParam( S, P_JOYID ) );
+  int JoyLocKey = int(mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ));
   if( JoyLocKey == 0 ) mdlOutputs_NULLJoy( S, tid );
   else mdlOutputs_REALJoy( S, tid );
 }                                                
@@ -588,7 +588,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
  */
 static void mdlTerminate(SimStruct *S)
 {
-  int JoyLocKey = mxGetScalar( ssGetSFcnParam( S, P_JOYID ) );
+  int JoyLocKey = int(mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ));
   if( JoyLocKey != 0 )
   {
     // Retrieve the Joystick object.
