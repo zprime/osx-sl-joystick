@@ -42,7 +42,7 @@ here = pwd;
 cd src
 try
   for ii=1:length(mexnames)
-    if ~exist( [mexnames{ii},'.',mexext()], 'file' )
+    if ~exist( ['./',mexnames{ii},'.',mexext()], 'file' )
       mex('-v','LDFLAGS=\$LDFLAGS -framework IOKit -framework CoreFoundation',...
         [mexnames{ii},'.cpp'],libnames{:});
       copyfile( [mexnames{ii},'.',mexext()], '../bin/', 'f' );
