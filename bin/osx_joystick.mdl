@@ -14,8 +14,8 @@ Library {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "zebb"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Mon Jul 16 15:02:59 2012"
-  RTWModifiedTimeStamp	  264351777
+  LastModifiedDate	  "Wed Jul 18 20:01:51 2012"
+  RTWModifiedTimeStamp	  264542508
   ModelVersionFormat	  "1.0"
   ConfigurationManager	  "None"
   SampleTimeColors	  off
@@ -541,7 +541,7 @@ Library {
   }
   System {
     Name		    "osx_joystick"
-    Location		    [633, 418, 1213, 678]
+    Location		    [190, 310, 770, 570]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -560,8 +560,10 @@ Library {
       Name		      "OSX Joystick"
       Ports		      [0, 3]
       Position		      [175, 89, 295, 151]
+      LoadFcn		      "osx_joystick_LoadFcn( gcb );"
+      InitFcn		      "JoyLocKey = osx_joystick_InitFcn( gcb );"
       FunctionName	      "sfun_osx_joystick"
-      Parameters	      "JoyLocKey,Ts,lA,lB,lP,lO"
+      Parameters	      "JoyLocKey,Ts,pA,pB,pP,pO"
       EnableBusSupport	      off
       MaskType		      "OSX Joystick"
       MaskDescription	      "Axes are doubles in [-1,1], Buttons are booleans, POVs (or hatswitch) are double in [0,36"
@@ -577,37 +579,15 @@ Library {
       ". to the joystick) don't appear to do much with the devices I have to test them out. Suggestions for improvement"
       " with the 'outputs' are welcome.\n\nNOTE: This block does not produce deployable code."
       MaskPromptString	      "Joystick|Enable Axes|Enable Buttons|Enable POVs|Enable Outputs|Sample Time"
-      MaskStyleString	      "popup(None),checkbox,checkbox,checkbox,checkbox,edit"
+      MaskStyleString	      "popup(0: None),checkbox,checkbox,checkbox,checkbox,edit"
       MaskTunableValueString  "off,off,off,off,off,off"
-      MaskCallbackString      "% Get the list, and save it\nlist = osx_joystick_get_available();\nstr = 'popup(None),c"
-      "heckbox,checkbox,checkbox,checkbox,edit';\nif ~isempty( list )\n  for ii=1:size(list,1)\n    list{ii,1} = regexp"
-      "rep( list{ii,1}, ['\\',char(124)], '-' );\n  end\n  set_param(gcb,'UserData',list);\n\n  % Modify the dialogue s"
-      "tring\n  str = regexprep( str, 'popup\\(.*\\),checkbox,checkbox,checkbox,checkbox,edit', ['popup(None', sprintf("
-      "[char(124),'%s'],list{:,1}),'),checkbox,checkbox,checkbox,checkbox,edit'], 'once' );\nelse\n  set_param(gcb,'Use"
-      "rData',[]);\nend\nset_param(gcb,'MaskStyleString',str);\n\n% Make sure the currently selected Joystick exists, i"
-      "f not, revert to None\nvals = get_param(gcb,'MaskValues');\nfound = 0;\nfor ii=1:size(list,1)\n  if strcmpi( val"
-      "s{1}, list{ii,1} )\n    found=1;\n    break;\n  end;\nend\nif ~found\n  vals{1} = 'None';\n  set_param(gcb,'Mask"
-      "Values',vals);\nend\n\n% If JoyID != 1, then hide the checkboxes\nif strcmpi(vals{1},'None')\n    set_param(gcb,"
-      "'MaskVisibilities',{'on','on','on','on','on','on'});\nelse\n    set_param(gcb,'MaskVisibilities',{'on','off','of"
-      "f','off','on','on'});\nend|||||"
+      MaskCallbackString      "osx_joystick_JoyIDFcn( gcb );|||||"
       MaskEnableString	      "on,on,on,on,on,on"
       MaskVisibilityString    "on,on,on,on,on,on"
       MaskToolTipString	      "on,on,on,on,on,on"
       MaskVarAliasString      ",,,,,"
-      MaskVariables	      "JoyID=@1;lA=@2;lB=@3;lP=@4;lO=@5;Ts=@6;"
-      MaskInitialization      "% If we have selected the empty (NULL) joystick\nif JoyID == 1\n  JoyLocKey = int32( 0 "
-      ");\nelse\n  list = get_param(gcb,'UserData');\n  if isempty(list) || JoyID > size(list,1)+1\n    JoyLocKey = int"
-      "32( 0 );\n  else\n    JoyLocKey = list{ JoyID-1, 2 };\n    [nA,nB,nP,nO] = osx_joystick_get_capabilities( JoyLoc"
-      "Key );\n    if nA; lA=1; else; lA=0; end;\n    if nB; lB=1; else; lB=0; end;\n    if nP; lP=1; else; lP=0; end;\n"
-      "  end\nend\n\n\n% Update the port labels\nlabel = sprintf('image( imread( ''osx-sl-joystick.png'') );\\n');\npor"
-      "tnum = 1;\nif lA\n  if exist('nA','var'); dims=sprintf(' [%i]',nA); else; dims=''; end;\n  label = [label, sprin"
-      "tf('port_label(''output'',%i,''Axes%s'');\\n',portnum,dims)];\n  portnum = portnum+1;\nend\nif lB\n  if exist('n"
-      "B','var'); dims=sprintf(' [%i]',nB); else; dims=''; end;\n  label = [label, sprintf('port_label(''output'',%i,''"
-      "Buttons%s'');\\n',portnum,dims)];\n  portnum = portnum+1;\nend\nif lP\n  if exist('nP','var'); dims=sprintf(' [%"
-      "i]',nP); else; dims=''; end;\n  label = [label, sprintf('port_label(''output'',%i,''POVs%s'');\\n',portnum,dims)"
-      "];\n  portnum = portnum+1;\nend\nif lO\n  if exist('nO','var'); dims=sprintf(' [%i]',nO); else; dims=''; end;\n "
-      " label = [label, sprintf('port_label(''input'',1,''Outputs%s'');\\n',dims)];\nend\n\nset_param( gcb, 'MaskDispla"
-      "y', label );"
+      MaskVariables	      "JoyID=@1;cbA=@2;cbB=@3;cbP=@4;cbO=@5;Ts=@6;"
+      MaskInitialization      "[JoyLocKey,pA,pB,pP,pO] = osx_joystick_MaskInitFcn( gcb, cbA, cbB, cbP, cbO );"
       MaskDisplay	      "image( imread( 'osx-sl-joystick.png') );\nport_label('output',1,'Axes');\nport_label('output'"
       ",2,'Buttons');\nport_label('output',3,'POVs');\n"
       MaskSelfModifiable      on
@@ -616,7 +596,7 @@ Library {
       MaskIconRotate	      "none"
       MaskPortRotate	      "default"
       MaskIconUnits	      "autoscale"
-      MaskValueString	      "None|on|on|on|off|1/30"
+      MaskValueString	      "0: None|on|on|on|off|1/30"
       MaskTabNameString	      ",,,,,"
     }
   }
