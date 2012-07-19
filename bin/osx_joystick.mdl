@@ -562,6 +562,7 @@ Library {
       Position		      [175, 89, 295, 151]
       LoadFcn		      "osx_joystick_LoadFcn( gcb );"
       InitFcn		      "osx_joystick_InitFcn( gcb );"
+      PreSaveFcn          "vals=get_param(gcb,'MaskValues');\nvals{1}='0: None';\nset_param(gcb,'MaskValues',vals);"
       FunctionName	      "sfun_osx_joystick"
       Parameters	      "JoyLocKey,Ts,pA,pB,pP,pO"
       EnableBusSupport	      off
