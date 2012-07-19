@@ -7,7 +7,7 @@ disp('osx_joystick_InitFcn called');
 ud = get_param( blk, 'UserData' );
 vals = get_param( blk, 'MaskValues' );
 
-% Make sure the value in the 
+% Make sure the value in the
 if isempty(ud.list) || ud.SelectedJoystick>size(ud.list,1) || ud.SelectedJoystick<0
   vals{1} = '0: None';
   warning('osx_joystick:BadValue','Bad value for ''SelectedJoystick'', reverting to the ''None'' joystick');
@@ -16,24 +16,27 @@ end
 
 % Make sure the Joystick is available. The best I can be bothered doing at
 % the moment is matching ProductKey and LocationKey
-list = osx_joystick_get_available();
-found = 0;
-for ii=1:size(list,1)
-  list{ii,1} = regexprep( list{ii,1}, '\|', '-' );
-  if list{ii,2}==ud.list{ud.SelectedValue,2} && regexp( list{ii,1}, ['^\d+: ',ud.list{ud.SelectedValue,2}] )
-    found = 1;
-    break;
+if ud.SelectedJoystick ~= 0
+  list = osx_joystick_get_available();
+  found = 0;
+  for ii=1:size(list,1)
+    list{ii,1} = regexprep( list{ii,1}, '\|', '-' );
+    if (list{ii,2}==ud.list{ud.SelectedJoystick,2})  ...
+        && ~isempty( regexp( ud.list{ ud.SelectedJoystick ,1}, [ '^\d+: ', list{ ii, 1}], 'once' ) )
+      found = 1;
+      break;
+    end
   end
-end
-if ~found
-  warning('osx_joystick:NotFound','Selected Joystick ''%s'' was not found. Reverting to the ''None'' joystick.', ud.list{ ud.selectedValue, 1 } );
-  vals{1} = '0: None';
-  set_param( blk, 'MaskValues', vals );
+  if ~found
+    warning('osx_joystick:NotFound','Selected Joystick ''%s'' was not found. Reverting to the ''None'' joystick.', ud.list{ ud.SelectedJoystick, 1 } );
+    vals{1} = '0: None';
+    set_param( blk, 'MaskValues', vals );
+  end
 end
 
 % Copyright (c) 2012, Zebb Prime and The University of Adelaide
 % All rights reserved.
-%  
+%
 % Redistribution and use in source and binary forms, with or without
 % modification, are permitted provided that the following conditions are met:
 %     * Redistributions of source code must retain the above copyright
@@ -44,7 +47,7 @@ end
 %     * Neither the name of the organization nor the
 %       names of its contributors may be used to endorse or promote products
 %       derived from this software without specific prior written permission.
-% 
+%
 % THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 % ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 % WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE

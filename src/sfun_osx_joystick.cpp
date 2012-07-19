@@ -143,6 +143,100 @@ static void mdlCheckParameters( SimStruct *S )
 }
 #endif
 
+#define MDL_SET_INPUT_PORT_WIDTH
+/**
+ * \brief Dynamically set the input port width.
+ */
+static void mdlSetInputPortWidth( SimStruct *S, int_T port, int_T inputPortWidth )
+{
+  ssSetInputPortWidth( S, port, inputPortWidth );
+}
+
+#define MDL_SET_OUTPUT_PORT_WIDTH
+/**
+ * \brief Dynamically set the output port width.
+ */
+static void mdlSetOutputPortWidth( SimStruct *S, int_T port, int_T outputPortWidth )
+{
+  ssSetOutputPortWidth(S,port,outputPortWidth);
+}
+
+# define MDL_SET_DEFAULT_PORT_DIMENSION_INFO
+/**
+ * \brief Set the default port sizes to be 1.
+ */
+static void mdlSetDefaultPortDimensionInfo( SimStruct *S )
+{
+  // Get 'logical' values as to whether to enable inputs and outputs
+  int output = 0;
+  if( mxGetScalar( ssGetSFcnParam( S, P_LA ) ) > 0 )
+  {
+    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
+    output++;
+  }
+  if( mxGetScalar( ssGetSFcnParam( S, P_LB ) ) > 0 )
+  {
+    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
+    output++;
+  }
+  if( mxGetScalar( ssGetSFcnParam( S, P_LP ) ) > 0 )
+  {
+    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
+    output++;
+  }
+  if( mxGetScalar( ssGetSFcnParam( S, P_LO ) ) > 0 )
+  {
+    if( ssGetInputPortWidth( S, 0 ) == DYNAMICALLY_SIZED ) ssSetInputPortWidth( S, 0, 1 );
+  }
+}
+
+
+/* Headers for mdlInitializeSizes helpers */
+void mdlInitializeSizes_NULLJoy( SimStruct *S );
+void mdlInitializeSizes_REALJoy( SimStruct *S );
+
+/**
+ * \brief Provide size information to Simulink.
+ *
+ * \param[in,out] S Simulink structure.
+ */
+static void mdlInitializeSizes(SimStruct *S)
+{
+  // Number of expected parameters, and check them.
+  ssSetNumSFcnParams( S, NUM_PARAMS );
+  mdlCheckParameters(S);
+  if (ssGetErrorStatus(S) != NULL) return;
+  
+  // No tunable parameters.
+  ssSetSFcnParamTunable( S, P_JOYID, SS_PRM_NOT_TUNABLE );
+  ssSetSFcnParamTunable( S, P_TS, SS_PRM_NOT_TUNABLE );
+
+  // No internal dynamic states
+  ssSetNumContStates(S, 0);
+  ssSetNumDiscStates(S, 0);
+  
+  // Number of sample times (1)
+  ssSetNumSampleTimes(S, 1);
+  // No Real work vector
+  ssSetNumRWork(S, 0);
+  // No integer work vector
+  ssSetNumIWork(S, 0);
+  // 2 pointers in the work vector (to store the Joystick object and Joystick IO)
+  ssSetNumPWork(S, 2);
+  // No Modes
+  ssSetNumModes(S, 0);
+  // No zero crossings
+  ssSetNumNonsampledZCs(S, 0);
+  // Allow automatic state saving and restoring
+  ssSetSimStateCompliance( S, USE_DEFAULT_SIM_STATE );
+  // No options set.
+  ssSetOptions(S, 0);
+
+  int32_t locKey = int32_t( mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ) );
+  if( locKey == 0 ) mdlInitializeSizes_NULLJoy( S );
+  else mdlInitializeSizes_REALJoy( S );
+}
+
 /**
  * \brief Provide size information to Simulink about the real Joystick.
  * \param[in,out] S Simulink structure.
@@ -154,6 +248,9 @@ void mdlInitializeSizes_REALJoy( SimStruct *S )
   int32_t locKey = int32_t( mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ) );
   if( !myJoy.Initialise( locKey ) )
   {
+    // If the joystick doesn't exist, initialise the sizes as per the NULL joystick, and
+    // return an error.
+    mdlInitializeSizes_NULLJoy( S );
     ssSetErrorStatus( S, "sfun-osx-joystick::mdlInitializeSizes Selected Joystick does not exist or couldn't be initialised." );
     return;
   }
@@ -280,96 +377,6 @@ void mdlInitializeSizes_NULLJoy( SimStruct *S )
     output++;
   }
 }
-
-#define MDL_SET_INPUT_PORT_WIDTH
-/**
- * \brief Dynamically set the input port width.
- */
-static void mdlSetInputPortWidth( SimStruct *S, int_T port, int_T inputPortWidth )
-{
-  ssSetInputPortWidth( S, port, inputPortWidth );
-}
-
-#define MDL_SET_OUTPUT_PORT_WIDTH
-/**
- * \brief Dynamically set the output port width.
- */
-static void mdlSetOutputPortWidth( SimStruct *S, int_T port, int_T outputPortWidth )
-{
-  ssSetOutputPortWidth(S,port,outputPortWidth);
-}
-
-# define MDL_SET_DEFAULT_PORT_DIMENSION_INFO
-/**
- * \brief Set the default port sizes to be 1.
- */
-static void mdlSetDefaultPortDimensionInfo( SimStruct *S )
-{
-  // Get 'logical' values as to whether to enable inputs and outputs
-  int output = 0;
-  if( mxGetScalar( ssGetSFcnParam( S, P_LA ) ) > 0 )
-  {
-    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
-    output++;
-  }
-  if( mxGetScalar( ssGetSFcnParam( S, P_LB ) ) > 0 )
-  {
-    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
-    output++;
-  }
-  if( mxGetScalar( ssGetSFcnParam( S, P_LP ) ) > 0 )
-  {
-    if( ssGetOutputPortWidth( S, output ) == DYNAMICALLY_SIZED ) ssSetOutputPortWidth( S, output, 1 );
-    output++;
-  }
-  if( mxGetScalar( ssGetSFcnParam( S, P_LO ) ) > 0 )
-  {
-    if( ssGetInputPortWidth( S, 0 ) == DYNAMICALLY_SIZED ) ssSetInputPortWidth( S, 0, 1 );
-  }
-}
-
-/**
- * \brief Provide size information to Simulink.
- *
- * \param[in,out] S Simulink structure.
- */
-static void mdlInitializeSizes(SimStruct *S)
-{
-  // Number of expected parameters, and check them.
-  ssSetNumSFcnParams( S, NUM_PARAMS );
-  mdlCheckParameters(S);
-  if (ssGetErrorStatus(S) != NULL) return;
-  
-  // No tunable parameters.
-  ssSetSFcnParamTunable( S, P_JOYID, SS_PRM_NOT_TUNABLE );
-  ssSetSFcnParamTunable( S, P_TS, SS_PRM_NOT_TUNABLE );
-
-  // No internal dynamic states
-  ssSetNumContStates(S, 0);
-  ssSetNumDiscStates(S, 0);
-  
-  // Number of sample times (1)
-  ssSetNumSampleTimes(S, 1);
-  // No Real work vector
-  ssSetNumRWork(S, 0);
-  // No integer work vector
-  ssSetNumIWork(S, 0);
-  // 2 pointers in the work vector (to store the Joystick object and Joystick IO)
-  ssSetNumPWork(S, 2);
-  // No Modes
-  ssSetNumModes(S, 0);
-  // No zero crossings
-  ssSetNumNonsampledZCs(S, 0);
-  // Allow automatic state saving and restoring
-  ssSetSimStateCompliance( S, USE_DEFAULT_SIM_STATE );
-  // No options set.
-  ssSetOptions(S, 0);
-
-  int32_t locKey = int32_t( mxGetScalar( ssGetSFcnParam( S, P_JOYID ) ) );
-  if( locKey == 0 ) mdlInitializeSizes_NULLJoy( S );
-  else mdlInitializeSizes_REALJoy( S );
-}
-
 
 
 /**

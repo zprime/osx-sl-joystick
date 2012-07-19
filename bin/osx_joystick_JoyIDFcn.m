@@ -34,7 +34,8 @@ else
   % If it's a real joystick, hide some of the options and get the sizes.
   set_param(blk,'MaskVisibilities',{'on','off','off','off','on','on'});
   try
-    ud.sizes = osx_joystick_get_capabilities( ud.list{ ud.SelectedJoystick, 2 } );
+    [ud.sizes(1),ud.sizes(2),ud.sizes(3),ud.sizes(4)] = ...
+        osx_joystick_get_capabilities( ud.list{ ud.SelectedJoystick, 2 } );
   catch err
     error('osx_joystick:CantGetSizes','Unable to obtain Joystick I/O capabilities. This may happen if you unexpectedly removed the joystick while selecting it at the same time.');
   end
