@@ -399,6 +399,23 @@ void mdlStart_NULLJoy( SimStruct *S )
 {
   ssGetPWork(S)[0] = NULL;
   ssGetPWork(S)[1] = NULL;
+  // Initialise POVs to -1.0
+  int lA, lB, lP;
+  lA = int( mxGetScalar( ssGetSFcnParam( S, P_LA ) ) );
+  lB = int( mxGetScalar( ssGetSFcnParam( S, P_LB ) ) );
+  lP = int( mxGetScalar( ssGetSFcnParam( S, P_LP ) ) );
+  int output = 0;
+  if( lA ) output++;
+  if( lB ) output++;
+  if( lP )
+  {
+    int_T pw = ssGetOutputPortWidth( S, output );
+    real_T *pr = ssGetOutputPortRealSignal( S, output );
+    for( int_T ii=0; ii<pw; ii++ )
+    {
+      pr[ ii ] = -1.0;
+    }
+  }
 }
 
 /**
