@@ -8,29 +8,30 @@ end
 
 % Get and Validate UserData
 ud = get_param( blk, 'UserData' );
-if isempty(ud) || ~isstruct( ud ) || ~all( isfield( ud, {'list','SelectedJoystick','sizes','MaskStyleString'} ) )
+if isempty(ud) || ~isstruct( ud ) || ~all( isfield( ud, {'list','SelectedJoystick','sizes','MaskStyleString','saving'} ) )
   % If UserData does not exist, create some
   clear('ud');
   ud.list = {}; % List of available joysticks.
   ud.SelectedJoystick = 0; % Index to the Joystick, 0=None
   ud.sizes = [0 0 0 0]; % Size information about the current joystick
+  ud.saving = 0; % Is the block just about to be saved?
   ud.MaskStyleString = 'popup(0: None),checkbox,checkbox,checkbox,checkbox,edit';
   set_param( blk, 'UserData', ud );
   set_param( blk, 'UserDataPersistent', 'on' );
 end
 
-% Restore Mask
-set_param( blk, 'MaskStyleString', ud.MaskStyleString );
-
-% Restore Value
-vals = get_param( blk, 'MaskValues' );
-if ud.SelectedJoystick <= 0 || ud.SelectedJoystick > size(ud.list,1)
-  vals{1} = '0: None';
-  ud.SelectedJoystick = 0;
-else
-  vals{1} = ud.list{ ud.SelectedJoystick, 1 };
-end
-set_param( blk, 'MaskValues', vals );
+% % Restore Mask
+% set_param( blk, 'MaskStyleString', ud.MaskStyleString );
+% 
+% % Restore Value
+% vals = get_param( blk, 'MaskValues' );
+% if ud.SelectedJoystick <= 0 || ud.SelectedJoystick > size(ud.list,1)
+%   vals{1} = '0: None';
+%   ud.SelectedJoystick = 0;
+% else
+%   vals{1} = ud.list{ ud.SelectedJoystick, 1 };
+% end
+% set_param( blk, 'MaskValues', vals );
 
 % MaskInitFcn will now redraw the mask appropriately.
 

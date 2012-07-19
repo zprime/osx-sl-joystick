@@ -34,8 +34,9 @@ else
   try
     [ud.sizes(1),ud.sizes(2),ud.sizes(3),ud.sizes(4)] = ...
         osx_joystick_get_capabilities( ud.list{ ud.SelectedJoystick, 2 } );
-  catch err
-    error('osx_joystick:CantGetSizes','Unable to obtain Joystick I/O capabilities. This may happen if you unexpectedly removed the joystick while selecting it at the same time.');
+  catch %#ok
+    ud.SelectedJoystick = 0;
+    set_param(blk,'MaskVisibilities',{'on','on','on','on','on','on'});
   end
 end
 

@@ -21,7 +21,7 @@ if ud.SelectedJoystick ~= 0
   foundPartial = 0;
   for ii=1:size(list,1)
     list{ii,1} = regexprep( list{ii,1}, '\|', '-' );
-    if ~isempty( regexp( ud.list{ ud.SelectedJoystick ,1}, [ '^\d+: ', list{ ii, 1 }], 'once' ) )
+    if ~isempty( regexp( ud.list{ ud.SelectedJoystick ,1}, [ '^\d+: ', regexptranslate('escape',list{ ii, 1 })], 'once' ) )
       foundPartial = ii;
       if (list{ii,2}==ud.list{ud.SelectedJoystick,2})
         foundIdentical = ii;

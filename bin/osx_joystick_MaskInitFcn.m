@@ -1,22 +1,33 @@
 % osx_joystick mask initialization callback helper function
 % This function should not be called directly.
-function [JoyLocKey,pA,pB,pP,pO,label] = osx_joystick_MaskInitFcn( blk, cbA, cbB, cbP, cbO )
+function [JoyLocKey,pA,pB,pP,pO,label,mss,vals] = osx_joystick_MaskInitFcn( blk, cbA, cbB, cbP, cbO )
 % ASSUMPTION: UserData has been validated by LoadFcn
 ud = get_param( blk, 'UserData' );
+
+vals = get_param( blk, 'MaskValues' );
+mss = ud.MaskStyleString;
 
 % If we have selected the empty (NULL) joystick
 if ud.SelectedJoystick==0 || isempty(ud.list) || ud.SelectedJoystick > size(ud.list,1)
   JoyLocKey = int32( 0 );
+  vals{1} = '0: None';
   if cbA; pA=1; else pA=0; end
   if cbB; pB=1; else pB=0; end
   if cbP; pP=1; else pP=0; end
   if cbO; pO=1; else pO=0; end
 else
   JoyLocKey = ud.list{ ud.SelectedJoystick, 2 };
+  vals{1} = ud.list{ ud.SelectedJoystick, 1 };
   if ud.sizes(1); pA=1; else pA=0; end
   if ud.sizes(2); pB=1; else pB=0; end
   if ud.sizes(3); pP=1; else pP=0; end
   if cbO;         pO=1; else pO=0; end
+end
+
+if ud.saving
+  ud.saving = 0;
+  vals{1} = '0: None';
+  set_param( blk, 'UserData', ud );
 end
 
 % Update the port labels

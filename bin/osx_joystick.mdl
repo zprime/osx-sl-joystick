@@ -562,7 +562,9 @@ Library {
       Position		      [175, 89, 295, 151]
       LoadFcn		      "osx_joystick_LoadFcn( gcb );"
       InitFcn		      "osx_joystick_InitFcn( gcb );"
-      PreSaveFcn          "vals=get_param(gcb,'MaskValues');\nvals{1}='0: None';\nset_param(gcb,'MaskValues',vals);"
+      PreSaveFcn          "ud = get_param(gcb,'UserData');\nud.saving=1;\nset_param(gcb,'UserData',ud);vals=get_param(gcb,'MaskValues');\nvals{1}='0: None';\nset_param(gcb,'MaskValues',vals);"
+      PostSaveFcn         "ud = get_param(gcb,'UserData');\nif ud.SelectedJoystick~=0\n  vals=get_param(gcb,'MaskValues');\n"
+                          "  vals{1}=ud.list{ ud.SelectedJoystick, 1 };\n  set_param(gcb,'MaskValues',vals);\nend"
       FunctionName	      "sfun_osx_joystick"
       Parameters	      "JoyLocKey,Ts,pA,pB,pP,pO"
       EnableBusSupport	      off
@@ -588,8 +590,8 @@ Library {
       MaskToolTipString	      "on,on,on,on,on,on"
       MaskVarAliasString      ",,,,,"
       MaskVariables	      "JoyID=@1;cbA=@2;cbB=@3;cbP=@4;cbO=@5;Ts=@6;"
-      MaskInitialization      "[JoyLocKey,pA,pB,pP,pO,label] = osx_joystick_MaskInitFcn( gcb, cbA, cbB, cbP, cbO );\n"
-                              "set_param( gcb, 'MaskDisplay', label );"
+      MaskInitialization      "[JoyLocKey,pA,pB,pP,pO,label,mss,vals] = osx_joystick_MaskInitFcn( gcb, cbA, cbB, cbP, cbO );\n"
+                              "set_param( gcb, 'MaskDisplay', label, 'MaskStyleString', mss, 'MaskValues', vals );"
       MaskDisplay	      "image( imread( 'osx-sl-joystick.png') );\nport_label('output',1,'Axes');\nport_label('output'"
       ",2,'Buttons');\nport_label('output',3,'POVs');\n"
       MaskSelfModifiable      on
