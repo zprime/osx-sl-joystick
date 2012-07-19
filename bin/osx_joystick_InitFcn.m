@@ -5,16 +5,17 @@ function osx_joystick_InitFcn( blk )
 ud = get_param( blk, 'UserData' );
 vals = get_param( blk, 'MaskValues' );
 
-% Make sure the value in the
-if isempty(ud.list) || ud.SelectedJoystick>size(ud.list,1) || ud.SelectedJoystick<0
-  vals{1} = '0: None';
-  warning('osx_joystick:BadValue','Bad value for ''SelectedJoystick'', reverting to the ''None'' joystick');
-  set_param( blk, 'MaskValues', vals );
-end
-
-% Make sure the Joystick is available. The best I can be bothered doing at
-% the moment is matching ProductKey and LocationKey
 if ud.SelectedJoystick ~= 0
+  
+  % Make sure the value reflects something in the list
+  if isempty(ud.list) || ud.SelectedJoystick>size(ud.list,1) || ud.SelectedJoystick<0
+    vals{1} = '0: None';
+    warning('osx_joystick:BadValue','Bad value for ''SelectedJoystick'', reverting to the ''None'' joystick');
+    set_param( blk, 'MaskValues', vals );
+  end
+  
+  % Make sure the Joystick is available. The best I can be bothered doing at
+  % the moment is matching ProductKey and LocationKey
   list = osx_joystick_get_available();
   foundIdentical = 0;
   foundPartial = 0;
