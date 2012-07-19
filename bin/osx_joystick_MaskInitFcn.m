@@ -1,8 +1,6 @@
 % osx_joystick mask initialization callback helper function
 % This function should not be called directly.
 function [JoyLocKey,pA,pB,pP,pO,label] = osx_joystick_MaskInitFcn( blk, cbA, cbB, cbP, cbO )
-disp('osx_joystick_MaskInitFcn called');
-
 % ASSUMPTION: UserData has been validated by LoadFcn
 ud = get_param( blk, 'UserData' );
 

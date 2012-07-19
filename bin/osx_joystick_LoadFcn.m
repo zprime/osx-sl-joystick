@@ -1,6 +1,5 @@
 function osx_joystick_LoadFcn( blk )
 % Restore the block using the saved UserData
-disp('LoadFcn called');
 
 % Check that this machine is a mac
 if ~ismac
@@ -18,7 +17,6 @@ if isempty(ud) || ~isstruct( ud ) || ~all( isfield( ud, {'list','SelectedJoystic
   ud.MaskStyleString = 'popup(0: None),checkbox,checkbox,checkbox,checkbox,edit';
   set_param( blk, 'UserData', ud );
   set_param( blk, 'UserDataPersistent', 'on' );
-  disp('Created new UserData');
 end
 
 % Restore Mask

@@ -1,8 +1,6 @@
 % osx_joystick block InitFcn callback helper function
 % This function should not be called directly
 function osx_joystick_InitFcn( blk )
-disp('osx_joystick_InitFcn called');
-
 % ASSUMPTION: UserData has been validated by LoadFcn
 ud = get_param( blk, 'UserData' );
 vals = get_param( blk, 'MaskValues' );
@@ -18,20 +16,48 @@ end
 % the moment is matching ProductKey and LocationKey
 if ud.SelectedJoystick ~= 0
   list = osx_joystick_get_available();
-  found = 0;
+  foundIdentical = 0;
+  foundPartial = 0;
   for ii=1:size(list,1)
     list{ii,1} = regexprep( list{ii,1}, '\|', '-' );
-    if (list{ii,2}==ud.list{ud.SelectedJoystick,2})  ...
-        && ~isempty( regexp( ud.list{ ud.SelectedJoystick ,1}, [ '^\d+: ', list{ ii, 1}], 'once' ) )
-      found = 1;
-      break;
+    if ~isempty( regexp( ud.list{ ud.SelectedJoystick ,1}, [ '^\d+: ', list{ ii, 1 }], 'once' ) )
+      foundPartial = ii;
+      if (list{ii,2}==ud.list{ud.SelectedJoystick,2})
+        foundIdentical = ii;
+        break;
+      end
     end
   end
-  if ~found
-    warning('osx_joystick:NotFound','Selected Joystick ''%s'' was not found. Reverting to the ''None'' joystick.', ud.list{ ud.SelectedJoystick, 1 } );
+  if foundIdentical
+    for ii=1:size(list,1)
+      list{ii,1} = sprintf('%i: %s',ii,list{ii,1});
+    end
+    ud.list = list;
+    vals{1} = list{foundIdentical,1};
+    str = 'popup(0: None),checkbox,checkbox,checkbox,checkbox,edit';
+    ud.SelectedJoystick = foundIdentical;
+    ud.MaskStyleString = regexprep( str, 'popup\(.*\),checkbox,checkbox,checkbox,checkbox,edit', ['popup(0: None', sprintf([char(124),'%s'],ud.list{:,1}),'),checkbox,checkbox,checkbox,checkbox,edit'], 'once' );
+  elseif foundPartial
+    joyProdKey = regexp( ud.list{ ud.SelectedJoystick, 1 }, '^\d+: (.*)', 'tokens' );
+    joyProdKey = joyProdKey{1};
+    warning('osx_joystick:FoundReplacement','Selected Joystick ''%s'' @ 0x%X was not found. Substituting with ''%s'' @ 0x%X instead.',joyProdKey{1},ud.list{ud.SelectedJoystick,2},joyProdKey{1},list{foundPartial,2});
+    for ii=1:size(list,1)
+      list{ii,1} = sprintf('%i: %s',ii,list{ii,1});
+    end
+    ud.list = list;
+    vals{1} = list{foundPartial,1};
+    str = 'popup(0: None),checkbox,checkbox,checkbox,checkbox,edit';
+    ud.SelectedJoystick = foundPartial;
+    ud.MaskStyleString = regexprep( str, 'popup\(.*\),checkbox,checkbox,checkbox,checkbox,edit', ['popup(0: None', sprintf([char(124),'%s'],ud.list{:,1}),'),checkbox,checkbox,checkbox,checkbox,edit'], 'once' );
+  else
+    joyProdKey = regexp( ud.list{ ud.SelectedJoystick, 1 }, '^\d+: (.*)', 'tokens' );
+    joyProdKey = joyProdKey{1};
+    warning('osx_joystick:NotFound','Selected Joystick ''%s'' @ 0x%X was not found. Reverting to the ''None'' joystick.', joyProdKey{1}, ud.list{ ud.SelectedJoystick, 2 } );
     vals{1} = '0: None';
-    set_param( blk, 'MaskValues', vals );
+    ud.MaskStyleString = 'popup(0: None),checkbox,checkbox,checkbox,checkbox,edit';
+    ud.SelectedJoystick = 0;
   end
+  set_param( blk, 'MaskStyleString', ud.MaskStyleString, 'MaskValues', vals, 'UserData', ud );
 end
 
 % Copyright (c) 2012, Zebb Prime and The University of Adelaide

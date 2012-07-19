@@ -1,8 +1,6 @@
 % osx_joystick JoyID parameter callback function
 % This function should not be called directly
 function osx_joystick_JoyIDFcn( blk )
-disp('osx_joystick_JoyIDFcn called');
-
 % ASSUMPTION: UserData has been validated by LoadFcn
 ud = get_param( blk, 'UserData' );
 
